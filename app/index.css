@@ -1,0 +1,9 @@
+html {
+  -webkit-text-size-adjust: 100%;
+}
+
+@media print {
+  header, nav, .no-print {
+    display: none !important;
+  }
+}
