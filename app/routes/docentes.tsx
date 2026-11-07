@@ -1,11 +1,11 @@
 import { RequireRole } from '../features/autenticacion'
-import { PlaceholderPage } from '../shared/ui/PlaceholderPage'
+import { DocentesListPage } from '../features/docentes'
 
-// TODO (estudiantes): reemplazar el placeholder por la pantalla real de app/features/docentes/
+// Solo el ADMIN gestiona docentes (lo exige también la API).
 export default function Docentes() {
   return (
     <RequireRole roles={['ADMIN']}>
-      <PlaceholderPage title="Docentes" feature="docentes" />
+      <DocentesListPage />
     </RequireRole>
   )
 }

@@ -12,6 +12,7 @@ export default [
     // Módulos pendientes: cada estudiante reemplaza el placeholder de su ruta por la pantalla real.
     route('estudiantes', 'routes/estudiantes.tsx'),
     route('docentes', 'routes/docentes.tsx'),
+    route('docentes/:id', 'routes/docente-ficha.tsx'),
     route('cursos', 'routes/cursos.tsx'),
     route('materias', 'routes/materias.tsx'),
     route('periodos-academicos', 'routes/periodos-academicos.tsx'),
