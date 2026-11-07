@@ -15,7 +15,7 @@ import Visibility from '@mui/icons-material/Visibility'
 import VisibilityOff from '@mui/icons-material/VisibilityOff'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useState } from 'react'
-import { useForm } from 'react-hook-form'
+import { Controller, useForm } from 'react-hook-form'
 import { Navigate, useLocation, useNavigate } from 'react-router'
 import { z } from 'zod'
 import { ApiError } from '../../../shared/api/errors'
@@ -59,10 +59,10 @@ export function LoginPage() {
   const [serverError, setServerError] = useState<string | null>(null)
 
   const {
-    register,
     handleSubmit,
     setValue,
     setFocus,
+    control,
     formState: { errors, isSubmitting },
   } = useForm<LoginForm>({ resolver: zodResolver(loginSchema), defaultValues: { email: '', password: '' } })
 
@@ -129,41 +129,53 @@ export function LoginPage() {
 
           <Box component="form" onSubmit={onSubmit} noValidate>
             <Stack spacing={2}>
-              <TextField
-                label="Correo electrónico"
-                type="email"
-                autoComplete="username"
-                autoFocus
-                fullWidth
-                required
-                error={Boolean(errors.email)}
-                helperText={errors.email?.message}
-                {...register('email')}
+              <Controller
+                control={control}
+                name="email"
+                render={({ field }) => (
+                  <TextField
+                    {...field}
+                    label="Correo electrónico"
+                    type="email"
+                    autoComplete="username"
+                    autoFocus
+                    fullWidth
+                    required
+                    error={Boolean(errors.email)}
+                    helperText={errors.email?.message}
+                  />
+                )}
               />
-              <TextField
-                label="Contraseña"
-                type={showPassword ? 'text' : 'password'}
-                autoComplete="current-password"
-                fullWidth
-                required
-                error={Boolean(errors.password)}
-                helperText={errors.password?.message}
-                slotProps={{
-                  input: {
-                    endAdornment: (
-                      <InputAdornment position="end">
-                        <IconButton
-                          edge="end"
-                          aria-label={showPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'}
-                          onClick={() => setShowPassword((v) => !v)}
-                        >
-                          {showPassword ? <VisibilityOff /> : <Visibility />}
-                        </IconButton>
-                      </InputAdornment>
-                    ),
-                  },
-                }}
-                {...register('password')}
+              <Controller
+                control={control}
+                name="password"
+                render={({ field }) => (
+                  <TextField
+                    {...field}
+                    label="Contraseña"
+                    type={showPassword ? 'text' : 'password'}
+                    autoComplete="current-password"
+                    fullWidth
+                    required
+                    error={Boolean(errors.password)}
+                    helperText={errors.password?.message}
+                    slotProps={{
+                      input: {
+                        endAdornment: (
+                          <InputAdornment position="end">
+                            <IconButton
+                              edge="end"
+                              aria-label={showPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'}
+                              onClick={() => setShowPassword((v) => !v)}
+                            >
+                              {showPassword ? <VisibilityOff /> : <Visibility />}
+                            </IconButton>
+                          </InputAdornment>
+                        ),
+                      },
+                    }}
+                  />
+                )}
               />
               <Button type="submit" variant="contained" size="large" disabled={isSubmitting} fullWidth>
                 {isSubmitting ? <CircularProgress size={24} color="inherit" aria-label="Ingresando" /> : 'Ingresar'}
