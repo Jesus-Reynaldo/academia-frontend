@@ -1,11 +1,11 @@
 import { RequireRole } from '../features/autenticacion'
-import { PlaceholderPage } from '../shared/ui/PlaceholderPage'
+import { PeriodosListPage } from '../features/periodos-academicos'
 
-// TODO (estudiantes): reemplazar el placeholder por la pantalla real de app/features/periodos-academicos/
+// Lectura para todos los roles; los botones de escritura solo se muestran al ADMIN (lo exige también la API).
 export default function PeriodosAcademicos() {
   return (
     <RequireRole roles={['ADMIN', 'DOCENTE', 'ESTUDIANTE']}>
-      <PlaceholderPage title="Períodos académicos" feature="periodos-academicos" />
+      <PeriodosListPage />
     </RequireRole>
   )
 }

@@ -6,6 +6,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { useState } from 'react'
 import { Links, Meta, Outlet, Scripts, ScrollRestoration } from 'react-router'
 import { ApiError } from './shared/api/errors'
+import { NotificationsProvider } from './shared/notifications/NotificationsProvider'
 import { theme } from './shared/theme/theme'
 import { AuthProvider } from './features/autenticacion'
 import './index.css'
@@ -71,9 +72,11 @@ export default function Root() {
     <ThemeProvider theme={theme}>
       <CssBaseline />
       <QueryClientProvider client={queryClient}>
-        <AuthProvider>
-          <Outlet />
-        </AuthProvider>
+        <NotificationsProvider>
+          <AuthProvider>
+            <Outlet />
+          </AuthProvider>
+        </NotificationsProvider>
       </QueryClientProvider>
     </ThemeProvider>
   )
