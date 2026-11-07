@@ -14,6 +14,7 @@ export default [
     route('docentes', 'routes/docentes.tsx'),
     route('cursos', 'routes/cursos.tsx'),
     route('materias', 'routes/materias.tsx'),
+    route('materias/:id', 'routes/materia-detalle.tsx'),
     route('periodos-academicos', 'routes/periodos-academicos.tsx'),
     route('inscripciones', 'routes/inscripciones.tsx'),
     route('calificaciones', 'routes/calificaciones.tsx'),

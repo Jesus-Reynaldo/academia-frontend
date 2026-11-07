@@ -3,6 +3,11 @@ import { useSearchParams } from 'react-router'
 
 type ParamValue = string | number | null | undefined
 
+interface UpdateOptions {
+  /** Reemplaza la entrada actual del historial en vez de agregar otra (útil al escribir en un buscador). */
+  replace?: boolean
+}
+
 /**
  * El estado de una tabla (página, filtros, orden) vive en la URL: enlaces compartibles,
  * botón "atrás" correcto y recarga sin perder contexto (docs/UI-UX-PLAN.md, 6.2).
@@ -14,7 +19,7 @@ export function useUrlParams() {
   const [searchParams, setSearchParams] = useSearchParams()
 
   const update = useCallback(
-    (changes: Record<string, ParamValue>) => {
+    (changes: Record<string, ParamValue>, options: UpdateOptions = {}) => {
       setSearchParams(
         (current) => {
           const next = new URLSearchParams(current)
@@ -25,7 +30,7 @@ export function useUrlParams() {
           if (!('page' in changes)) next.delete('page')
           return next
         },
-        { replace: false },
+        { replace: options.replace ?? false },
       )
     },
     [setSearchParams],
