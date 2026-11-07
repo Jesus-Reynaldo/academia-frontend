@@ -51,8 +51,9 @@ interface DataTableProps<T> {
   getRowSx?: (row: T) => SxProps<Theme>
   /** Celda de acciones por fila (menú ⋮). Si no se pasa, no se muestra la columna. */
   rowActions?: (row: T) => ReactNode
-  sort: { sortBy: string; order: SortOrder }
-  onSortChange: (sortBy: string, order: SortOrder) => void
+  /** Orden actual. Sin `sort`/`onSortChange` la tabla no ofrece ordenar (p. ej. si el endpoint no lo permite). */
+  sort?: { sortBy: string; order: SortOrder }
+  onSortChange?: (sortBy: string, order: SortOrder) => void
   pagination: {
     /** Base 1, igual que la API. */
     page: number
@@ -88,7 +89,9 @@ export function DataTable<T>({
   const theme = useTheme()
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'))
 
+  const canSort = sort !== undefined && onSortChange !== undefined
   const toggleSort = (field: string) => {
+    if (!sort || !onSortChange) return
     if (sort.sortBy === field) onSortChange(field, sort.order === 'asc' ? 'desc' : 'asc')
     else onSortChange(field, 'asc')
   }
@@ -124,13 +127,13 @@ export function DataTable<T>({
   )
 
   if (isMobile) {
-    const sortable = columns.filter((column) => column.sortField)
+    const sortable = canSort ? columns.filter((column) => column.sortField) : []
     const primary = columns.find((column) => column.primary) ?? columns[0]!
     const details = columns.filter((column) => column !== primary)
 
     return (
       <Box>
-        {sortable.length > 0 && (
+        {sort && onSortChange && sortable.length > 0 && (
           <Stack direction="row" spacing={1} sx={{ mb: 1.5, alignItems: 'center' }}>
             <TextField
               select
@@ -217,23 +220,23 @@ export function DataTable<T>({
           <TableHead>
             <TableRow>
               {columns.map((column) => {
-                const active = column.sortField !== undefined && sort.sortBy === column.sortField
+                const active = sort !== undefined && column.sortField !== undefined && sort.sortBy === column.sortField
                 return (
                   <TableCell
                     key={column.id}
                     scope="col"
                     align={column.align}
-                    sortDirection={active ? sort.order : false}
+                    sortDirection={active && sort ? sort.order : false}
                     sx={{ fontWeight: 600, whiteSpace: 'nowrap' }}
                   >
-                    {column.sortField ? (
+                    {column.sortField && canSort ? (
                       <TableSortLabel
                         active={active}
-                        direction={active ? sort.order : 'asc'}
+                        direction={active && sort ? sort.order : 'asc'}
                         onClick={() => toggleSort(column.sortField!)}
                       >
                         {column.header}
-                        {active && (
+                        {active && sort && (
                           <Box component="span" sx={visuallyHidden}>
                             {sort.order === 'asc' ? ' (orden ascendente)' : ' (orden descendente)'}
                           </Box>
