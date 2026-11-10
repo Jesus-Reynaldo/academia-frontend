@@ -1,5 +1,15 @@
-import { BarChart } from '@mui/x-charts/BarChart'
-import { LineChart } from '@mui/x-charts/LineChart'
+import {
+  Bar,
+  BarChart,
+  CartesianGrid,
+  Cell,
+  Line,
+  LineChart,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis,
+} from 'recharts'
 import AddOutlined from '@mui/icons-material/AddOutlined'
 import SchoolOutlined from '@mui/icons-material/SchoolOutlined'
 import Box from '@mui/material/Box'
@@ -32,6 +42,7 @@ import { PageHeader } from '../../../shared/ui/PageHeader'
 import { QueryState } from '../../../shared/ui/QueryState'
 import { SectionCard } from '../../../shared/ui/SectionCard'
 import { chartColors, colors } from '../../../shared/theme/tokens'
+import { formatNota } from '../../../shared/lib/format'
 import {
   useAdminResumen,
   useCalificacionesAdmin,
@@ -48,6 +59,18 @@ import type { CalificacionDashboard } from '../model/types'
 
 function nombreCompleto(estudiante?: CalificacionDashboard['inscripcion']['estudiante']) {
   return estudiante ? `${estudiante.nombres} ${estudiante.apellidos}` : 'Estudiante'
+}
+
+function correspondeAlAnio(
+  periodo: { nombre: string; fechaInicio: string; fechaFin: string },
+  anio: number,
+) {
+  const anioTexto = String(anio)
+  if (new RegExp(`(?:^|\\D)${anioTexto}(?:\\D|$)`).test(periodo.nombre)) return true
+
+  const anioInicio = Number(periodo.fechaInicio.slice(0, 4))
+  const anioFin = Number(periodo.fechaFin.slice(0, 4))
+  return anioInicio <= anio && anioFin >= anio
 }
 
 function ListaCalificaciones({ query }: { query: ReturnType<typeof useCalificacionesAdmin> }) {
@@ -78,27 +101,44 @@ function ListaCalificaciones({ query }: { query: ReturnType<typeof useCalificaci
 }
 
 function DashboardAdmin() {
-  const [periodoId, setPeriodoId] = useState<number | undefined>(undefined)
+  const [periodoIdManual, setPeriodoIdManual] = useState<number | undefined>(undefined)
   const [materiaId, setMateriaId] = useState<number | undefined>(undefined)
   const [umbral, setUmbral] = useState(51)
   const [paginaRiesgo, setPaginaRiesgo] = useState(1)
   const resumen = useAdminResumen()
   const periodos = usePeriodosReferencia()
   const materias = useMateriasBuscar('', undefined)
-  const ocupacion = useOcupacionCursos(periodoId)
-  const promedios = usePromediosCursos(periodoId)
-  const distribucion = useDistribucionNotas(periodoId, materiaId)
-  const riesgo = useEstudiantesEnRiesgo(periodoId, umbral, paginaRiesgo)
   const ultimas = useCalificacionesAdmin()
 
+  const anioActual = new Date().getFullYear()
   const periodoActivo = resumen.data?.periodoActivo
+  const periodosDelAnio = periodos.data?.filter((periodo) =>
+    correspondeAlAnio(periodo, anioActual),
+  ) ?? []
+  const periodoPorDefecto =
+    periodosDelAnio.find((periodo) => periodo.estado === 'ACTIVO') ??
+    periodosDelAnio[0] ??
+    periodos.data?.find((periodo) => periodo.estado === 'ACTIVO')
+  const periodoSeleccionado =
+    periodos.data?.find((periodo) => periodo.id === periodoIdManual) ?? periodoPorDefecto
+  const periodoId = periodoIdManual ?? periodoSeleccionado?.id
+  const consultasPeriodoHabilitadas =
+    periodoIdManual !== undefined ||
+    periodoSeleccionado !== undefined ||
+    (periodos.isSuccess && resumen.isSuccess)
+  const ocupacion = useOcupacionCursos(periodoId, consultasPeriodoHabilitadas)
+  const promedios = usePromediosCursos(periodoId, consultasPeriodoHabilitadas)
+  const distribucion = useDistribucionNotas(periodoId, materiaId, consultasPeriodoHabilitadas)
+  const riesgo = useEstudiantesEnRiesgo(periodoId, umbral, paginaRiesgo, consultasPeriodoHabilitadas)
 
   return (
     <>
       <PageHeader
         title="Resumen"
         subtitle={
-          periodoActivo ? `Período vigente: ${periodoActivo.nombre}` : 'Período vigente: Sin período activo'
+          periodoSeleccionado
+            ? `Período seleccionado: ${periodoSeleccionado.nombre}`
+            : `Período seleccionado: ${anioActual} (sin período registrado)`
         }
         actions={
           <FormControl size="small" sx={{ minWidth: 220 }}>
@@ -106,13 +146,17 @@ function DashboardAdmin() {
             <Select<number | ''>
               labelId="periodo-dashboard"
               label="Período"
-              value={periodoId ?? ''}
+              value={periodoSeleccionado?.id ?? ''}
               onChange={(event) => {
-                setPeriodoId(event.target.value === '' ? undefined : Number(event.target.value))
+                setPeriodoIdManual(event.target.value === '' ? undefined : Number(event.target.value))
                 setPaginaRiesgo(1)
               }}
             >
-              <MenuItem value="">Período activo</MenuItem>
+              {!periodoSeleccionado && (
+                <MenuItem value="" disabled>
+                  {periodos.isPending ? 'Cargando períodos…' : `Sin período para ${anioActual}`}
+                </MenuItem>
+              )}
               {periodos.data?.map((periodo) => (
                 <MenuItem key={periodo.id} value={periodo.id}>{periodo.nombre}</MenuItem>
               ))}
@@ -123,14 +167,14 @@ function DashboardAdmin() {
 
       <Grid component="div" container spacing={2} sx={{ mb: 3 }}>
         {[
-          ['Estudiantes activos', resumen.data?.totales.estudiantesActivos],
-          ['Docentes activos', resumen.data?.totales.docentesActivos],
-          ['Cursos activos', resumen.data?.totales.cursosActivos],
-          ['Materias activas', resumen.data?.totales.materiasActivas],
-          ['Inscripciones activas', resumen.data?.inscripcionesActivas],
-        ].map(([label, value]) => (
-          <Grid component="div" key={String(label)} size={{ xs: 6, sm: 4, md: 2.4 }}>
-            <KpiCard label={String(label)} value={value as number | undefined} loading={resumen.isPending} />
+          { label: 'Estudiantes activos', value: resumen.data?.totales.estudiantesActivos, to: '/estudiantes' },
+          { label: 'Docentes activos', value: resumen.data?.totales.docentesActivos, to: '/docentes' },
+          { label: 'Cursos activos', value: resumen.data?.totales.cursosActivos, to: '/cursos' },
+          { label: 'Materias activas', value: resumen.data?.totales.materiasActivas, to: '/materias' },
+          { label: 'Inscripciones activas', value: resumen.data?.inscripcionesActivas, to: '/inscripciones' },
+        ].map(({ label, value, to }) => (
+          <Grid component="div" key={label} size={{ xs: 6, sm: 4, md: 2.4 }}>
+            <KpiCard label={label} value={value} loading={resumen.isPending} to={to} />
           </Grid>
         ))}
       </Grid>
@@ -174,12 +218,17 @@ function DashboardAdmin() {
             <QueryState query={promedios} isEmpty={(data) => data.data.length === 0} emptyTitle="Sin promedios" skeletonHeight={240}>
               {(data) => (
                 <Box role="img" aria-label={`Promedios por curso: ${data.data.map((item) => `${item.curso} ${item.promedio}`).join('; ')}`}>
-                  <BarChart
-                    height={250}
-                    xAxis={[{ scaleType: 'band', data: data.data.map((item) => item.curso) }]}
-                    series={[{ data: data.data.map((item) => item.promedio), color: chartColors[0], label: 'Promedio' }]}
-                    yAxis={[{ min: 0, max: 100 }]}
-                  />
+                  <Box sx={{ width: '100%', height: 250 }}>
+                    <ResponsiveContainer width="100%" height="100%">
+                      <BarChart data={data.data} margin={{ top: 12, right: 12, left: 0, bottom: 8 }}>
+                        <CartesianGrid stroke={colors.divider} strokeDasharray="3 3" vertical={false} />
+                        <XAxis dataKey="curso" tick={{ fill: colors.text.secondary, fontSize: 12 }} />
+                        <YAxis domain={[0, 100]} tick={{ fill: colors.text.secondary, fontSize: 12 }} />
+                        <Tooltip formatter={(value) => [formatNota(Number(value)), 'Promedio']} />
+                        <Bar dataKey="promedio" name="Promedio" fill={chartColors[0]} radius={[4, 4, 0, 0]} />
+                      </BarChart>
+                    </ResponsiveContainer>
+                  </Box>
                 </Box>
               )}
             </QueryState>
@@ -202,12 +251,29 @@ function DashboardAdmin() {
             <QueryState query={distribucion} isEmpty={(data) => data.data.every((item) => item.cantidad === 0)} emptyTitle="Sin calificaciones" skeletonHeight={240}>
               {(data) => (
                 <Box role="img" aria-label={`Distribución de notas: ${data.data.map((item) => `${item.rango} ${item.cantidad}`).join('; ')}`}>
-                  <BarChart
-                    height={250}
-                    xAxis={[{ scaleType: 'band', data: data.data.map((item) => item.rango) }]}
-                    series={[{ data: data.data.map((item) => item.cantidad), label: 'Calificaciones', color: colors.info.main }]}
-                    yAxis={[{ min: 0 }]}
-                  />
+                  <Box sx={{ width: '100%', height: 250 }}>
+                    <ResponsiveContainer width="100%" height="100%">
+                      <BarChart data={data.data} margin={{ top: 12, right: 12, left: 0, bottom: 8 }}>
+                        <CartesianGrid stroke={colors.divider} strokeDasharray="3 3" vertical={false} />
+                        <XAxis dataKey="rango" tick={{ fill: colors.text.secondary, fontSize: 12 }} />
+                        <YAxis allowDecimals={false} tick={{ fill: colors.text.secondary, fontSize: 12 }} />
+                        <Tooltip formatter={(value) => [Number(value), 'Calificaciones']} />
+                        <Bar dataKey="cantidad" name="Calificaciones" radius={[4, 4, 0, 0]}>
+                          {data.data.map((item) => (
+                            <Cell
+                              key={item.rango}
+                              fill={
+                                item.rango === '0-50' ? colors.error.main
+                                  : item.rango === '51-70' ? colors.warning.main
+                                    : item.rango === '71-85' ? colors.info.main
+                                      : colors.success.main
+                              }
+                            />
+                          ))}
+                        </Bar>
+                      </BarChart>
+                    </ResponsiveContainer>
+                  </Box>
                 </Box>
               )}
             </QueryState>
@@ -307,7 +373,29 @@ function DashboardDocente() {
             <QueryState query={distribucion} skeletonHeight={240}>
               {(data) => (
                 <Box role="img" aria-label={`Distribución: ${data.data.map((item) => `${item.rango} ${item.cantidad}`).join('; ')}`}>
-                  <BarChart height={250} xAxis={[{ scaleType: 'band', data: data.data.map((item) => item.rango) }]} series={[{ data: data.data.map((item) => item.cantidad), label: 'Calificaciones', color: colors.info.main }]} yAxis={[{ min: 0 }]} />
+                  <Box sx={{ width: '100%', height: 250 }}>
+                    <ResponsiveContainer width="100%" height="100%">
+                      <BarChart data={data.data} margin={{ top: 12, right: 12, left: 0, bottom: 8 }}>
+                        <CartesianGrid stroke={colors.divider} strokeDasharray="3 3" vertical={false} />
+                        <XAxis dataKey="rango" tick={{ fill: colors.text.secondary, fontSize: 12 }} />
+                        <YAxis allowDecimals={false} tick={{ fill: colors.text.secondary, fontSize: 12 }} />
+                        <Tooltip formatter={(value) => [Number(value), 'Calificaciones']} />
+                        <Bar dataKey="cantidad" name="Calificaciones" radius={[4, 4, 0, 0]}>
+                          {data.data.map((item) => (
+                            <Cell
+                              key={item.rango}
+                              fill={
+                                item.rango === '0-50' ? colors.error.main
+                                  : item.rango === '51-70' ? colors.warning.main
+                                    : item.rango === '71-85' ? colors.info.main
+                                      : colors.success.main
+                              }
+                            />
+                          ))}
+                        </Bar>
+                      </BarChart>
+                    </ResponsiveContainer>
+                  </Box>
                 </Box>
               )}
             </QueryState>
@@ -345,8 +433,27 @@ function DashboardEstudiante() {
           <SectionCard title="Promedio por período">
             <QueryState query={resumen} isEmpty={(data) => data.porPeriodo.length === 0} emptyTitle="Sin promedios por período" skeletonHeight={260}>
               {(data) => (
-                <Box role="img" aria-label={`Promedios por período: ${data.porPeriodo.map((item) => `${item.periodo} ${item.promedio ?? 0}`).join('; ')}`}>
-                  <LineChart height={280} xAxis={[{ scaleType: 'point', data: data.porPeriodo.map((item) => item.periodo) }]} series={[{ data: data.porPeriodo.map((item) => item.promedio ?? 0), label: 'Promedio', color: chartColors[0] }]} yAxis={[{ min: 0, max: 100 }]} />
+                <Box role="img" aria-label={`Promedios por período: ${data.porPeriodo.map((item) => `${item.periodo} ${formatNota(item.promedio)}`).join('; ')}`}>
+                  <Box sx={{ width: '100%', height: 280 }}>
+                    <ResponsiveContainer width="100%" height="100%">
+                      <LineChart data={data.porPeriodo} margin={{ top: 12, right: 12, left: 0, bottom: 8 }}>
+                        <CartesianGrid stroke={colors.divider} strokeDasharray="3 3" vertical={false} />
+                        <XAxis dataKey="periodo" tick={{ fill: colors.text.secondary, fontSize: 12 }} />
+                        <YAxis domain={[0, 100]} tick={{ fill: colors.text.secondary, fontSize: 12 }} />
+                        <Tooltip formatter={(value) => [formatNota(value == null ? null : Number(value)), 'Promedio']} />
+                        <Line
+                          type="monotone"
+                          dataKey="promedio"
+                          name="Promedio"
+                          stroke={chartColors[0]}
+                          strokeWidth={3}
+                          dot={{ r: 4, fill: chartColors[0] }}
+                          activeDot={{ r: 6 }}
+                          connectNulls={false}
+                        />
+                      </LineChart>
+                    </ResponsiveContainer>
+                  </Box>
                 </Box>
               )}
             </QueryState>

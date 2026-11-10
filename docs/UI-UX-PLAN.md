@@ -12,7 +12,7 @@
 | Producto | Dashboard web del Sistema Académico: estudiantes, docentes, cursos, materias, períodos, inscripciones y calificaciones | Spec del backend |
 | Usuarios | 3 roles con experiencias distintas: **ADMIN**, **DOCENTE**, **ESTUDIANTE** | El menú y las pantallas se construyen según `usuario.rol` (RF-AUTH-05) |
 | Stack ya instalado | React 19, React Router (modo framework), TanStack Query, MUI 9 + Emotion, TypeScript | Estado actual del repo |
-| Librería de UI | **MUI** (+ MUI X Charts) como base de componentes, con un tema propio (no el aspecto Material por defecto) | Ya instalada; accesible y con tabla, diálogos, formularios y date pickers maduros |
+| Librería de UI | **MUI** como base de componentes y **Recharts** para gráficos, con un tema propio (no el aspecto Material por defecto) | MUI ofrece componentes accesibles; Recharts permite gráficos responsivos |
 | Arquitectura de código | **Screaming Architecture** (carpetas por dominio académico, no por tipo técnico) | Solicitado; ver sección 12 |
 | Idioma | Interfaz en español; términos del dominio igual que la API (`Estudiante`, `Inscripción`, `Calificación`) | El dominio y los mensajes del servidor ya están en español |
 | Tono visual | Sobrio, confiable y legible: herramienta de trabajo diaria, no una web de marketing | Admin/docente pasan horas en la herramienta; la investigación apunta a paletas más calmadas en áreas de gestión |
@@ -24,7 +24,7 @@
 | D1 | Modo de render | **SPA** (`ssr: false`). El JWT vive en el navegador y las rutas protegidas se resuelven en el cliente. Ya configurado en `react-router.config.ts`. |
 | D2 | Marca institucional | **Ninguna por ahora.** Se usa la paleta propuesta (índigo `#2740B8`); cambiar la marca solo requiere editar los tokens del tema. |
 | D3 | Plataforma | **Solo web responsive** (sin app móvil ni flujos específicos). Debe usarse bien desde 360 px, pero el diseño prioriza escritorio. |
-| D4 | Formularios y gráficos | **React Hook Form + Zod** y **MUI X Charts** (instalados). |
+| D4 | Formularios y gráficos | **React Hook Form + Zod** y **Recharts**. |
 | D5 | Modo oscuro | **Fuera de alcance.** Solo tema claro. Se conserva la estructura de tokens para poder añadirlo en el futuro. |
 | D6 | Reparto del trabajo | El **docente** entrega: login, layout con menú lateral por rol, dependencias, plan UI/UX y arquitectura. Los **estudiantes** implementan el resto, **incluido el dashboard de Inicio** (ver sección 14). |
 
@@ -170,7 +170,7 @@ Reglas para gráficos:
 - Ocupación de curso: barra con relleno primario; ≥ 90 % pasa a ámbar y 100 % a rojo (con texto "Lleno").
 - Siempre: título, etiquetas directas o leyenda, valores accesibles en tooltip y una **tabla/lista alternativa** para lectores de pantalla.
 - Sin 3D, sin pasteles de más de 4 porciones, ejes que arrancan en 0 para barras.
-- Librería: **MUI X Charts** (mismo ecosistema/tema).
+- Librería: **Recharts**; gráficos responsivos con colores de `shared/theme/tokens`.
 
 ### 5.7 Modo oscuro — fuera de alcance
 
@@ -378,7 +378,7 @@ Resumen · Período vigente: 2026-I [Activo]                [Período ▾]
 ```
 
 - 5 `KpiCard`; si `periodoActivo` es `null` → tarjeta "Sin período activo" con enlace a Períodos.
-- Cada bloque con carga/vacío/error **independientes** (RF-INI-06). Selector de período afecta a ocupación, promedios, distribución y riesgo.
+- Cada bloque con carga/vacío/error **independientes** (RF-INI-06). El selector inicia en el período del año calendario actual (si hay más de uno, prefiere el activo); si no existe, usa el período activo disponible. El usuario puede elegir otro período. La selección afecta a ocupación, promedios, distribución y riesgo.
 - Riesgo: control numérico/slider del `umbral` (por defecto 51), lista paginada, cada fila enlaza a la ficha.
 - Ocupación: barra con texto "28/30 · 93 %"; sin capacidad (`porcentaje: null`) muestra solo "28 inscritos".
 
@@ -605,7 +605,7 @@ app/
 
 ## 15. Decisiones
 
-Resueltas (ver 1.1): SPA, sin marca institucional, solo web responsive, React Hook Form + Zod, MUI X Charts, sin modo oscuro, reparto docente/estudiantes.
+Resueltas (ver 1.1): SPA, sin marca institucional, solo web responsive, React Hook Form + Zod, Recharts, sin modo oscuro, reparto docente/estudiantes.
 
 Pendiente (opcional): **Storybook** como catálogo de `shared/ui`. No está instalado; solo se añadiría si hay tiempo.
 
