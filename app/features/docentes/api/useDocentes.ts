@@ -20,11 +20,22 @@ export function useDocentesList(params: DocenteListParams) {
   })
 }
 
-/** Un docente por id (para la ficha). */
-export function useDocente(id: number) {
+/** Un docente por id. `id` nulo: consulta desactivada (p. ej. un selector sin nada elegido). */
+export function useDocente(id: number | null) {
   return useQuery({
-    queryKey: docentesKeys.detail(id),
-    queryFn: ({ signal }) => docentesApi.get(id, signal),
+    queryKey: docentesKeys.detail(id ?? 0),
+    queryFn: ({ signal }) => docentesApi.get(id as number, signal),
+    enabled: id !== null,
+  })
+}
+
+/** Búsqueda para el selector: mantiene los resultados previos mientras llega la nueva. */
+export function useDocentesBuscar(texto: string) {
+  return useQuery({
+    queryKey: [...docentesKeys.all, 'buscar', texto] as const,
+    queryFn: async ({ signal }) =>
+      (await docentesApi.list({ page: 1, limit: 20, sortBy: 'apellidos', order: 'asc', nombre: texto || undefined }, signal)).data,
+    placeholderData: keepPreviousData,
   })
 }
 
