@@ -4,7 +4,7 @@ import { EmptyState } from '../../../shared/ui/EmptyState'
 import { QueryState } from '../../../shared/ui/QueryState'
 import { StatusChip } from '../../../shared/ui/StatusChip'
 import { useEstudiantesDelCurso } from '../api/useCursos'
-import { usePaginaEnRango } from '../model/usePaginaEnRango'
+import { usePaginaEnRango } from '../../../shared/hooks/usePaginaEnRango'
 import type { EstudianteDelCurso, PaginaDetalleParams } from '../model/types'
 
 const LIMITES = [10, 20, 50]

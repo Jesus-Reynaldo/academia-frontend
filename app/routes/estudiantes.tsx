@@ -1,11 +1,11 @@
 import { RequireRole } from '../features/autenticacion'
-import { PlaceholderPage } from '../shared/ui/PlaceholderPage'
+import { EstudiantesListPage } from '../features/estudiantes'
 
-// TODO (estudiantes): reemplazar el placeholder por la pantalla real de app/features/estudiantes/
+// ADMIN y DOCENTE; los botones de escritura solo se muestran al ADMIN (lo exige también la API).
 export default function Estudiantes() {
   return (
     <RequireRole roles={['ADMIN', 'DOCENTE']}>
-      <PlaceholderPage title="Estudiantes" feature="estudiantes" />
+      <EstudiantesListPage />
     </RequireRole>
   )
 }
