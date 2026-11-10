@@ -1,11 +1,11 @@
 import { RequireRole } from '../features/autenticacion'
-import { PlaceholderPage } from '../shared/ui/PlaceholderPage'
+import { CalificacionesListPage } from '../features/calificaciones'
 
-// TODO (estudiantes): reemplazar el placeholder por la pantalla real de app/features/calificaciones/
+// Gestión de calificaciones: ADMIN y DOCENTE. El ESTUDIANTE consulta las suyas en /mi/calificaciones.
 export default function Calificaciones() {
   return (
-    <RequireRole roles={['ADMIN', 'DOCENTE', 'ESTUDIANTE']}>
-      <PlaceholderPage title="Calificaciones" feature="calificaciones" />
+    <RequireRole roles={['ADMIN', 'DOCENTE']}>
+      <CalificacionesListPage modo="gestion" />
     </RequireRole>
   )
 }

@@ -1,11 +1,11 @@
 import { RequireRole } from '../features/autenticacion'
-import { PlaceholderPage } from '../shared/ui/PlaceholderPage'
+import { CalificacionesListPage } from '../features/calificaciones'
 
-// TODO (estudiantes): reemplazar el placeholder por la pantalla real de app/features/calificaciones/
+// Calificaciones propias: la API limita cada listado a las del docente o estudiante que consulta.
 export default function MisCalificaciones() {
   return (
     <RequireRole roles={['DOCENTE', 'ESTUDIANTE']}>
-      <PlaceholderPage title="Mis calificaciones" feature="calificaciones" />
+      <CalificacionesListPage modo="mias" />
     </RequireRole>
   )
 }
