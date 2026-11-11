@@ -1,5 +1,5 @@
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import type { CursoInput, CursoListParams, PaginaDetalleParams } from '../model/types'
+import type { CursoInput, CursoListParams, EstadoCurso, PaginaDetalleParams } from '../model/types'
 import { cursosApi } from './cursos.api'
 
 // Claves jerárquicas: invalidar ['cursos'] refresca el listado y los detalles a la vez.
@@ -21,10 +21,23 @@ export function useCursosList(params: CursoListParams) {
   })
 }
 
-export function useCurso(id: number) {
+/** `id` nulo: consulta desactivada (p. ej. un selector sin nada elegido). */
+export function useCurso(id: number | null) {
   return useQuery({
-    queryKey: cursosKeys.detail(id),
-    queryFn: ({ signal }) => cursosApi.get(id, signal),
+    queryKey: cursosKeys.detail(id ?? 0),
+    queryFn: ({ signal }) => cursosApi.get(id as number, signal),
+    enabled: id !== null,
+  })
+}
+
+/** Búsqueda para el selector: cachea por texto y mantiene los resultados previos mientras llega la nueva. */
+export function useCursosBuscar(texto: string, estado?: EstadoCurso) {
+  return useQuery({
+    queryKey: [...cursosKeys.all, 'buscar', texto, estado] as const,
+    queryFn: async ({ signal }) =>
+      (await cursosApi.list({ page: 1, limit: 50, sortBy: 'nombre', order: 'asc', nombre: texto || undefined, estado }, signal))
+        .data,
+    placeholderData: keepPreviousData,
   })
 }
 

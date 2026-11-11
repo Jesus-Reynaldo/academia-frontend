@@ -14,6 +14,9 @@ import AddOutlined from '@mui/icons-material/AddOutlined'
 import SchoolOutlined from '@mui/icons-material/SchoolOutlined'
 import Box from '@mui/material/Box'
 import Button from '@mui/material/Button'
+import Card from '@mui/material/Card'
+import CardActionArea from '@mui/material/CardActionArea'
+import CardContent from '@mui/material/CardContent'
 import FormControl from '@mui/material/FormControl'
 import Grid from '@mui/material/Grid'
 import InputLabel from '@mui/material/InputLabel'
@@ -31,11 +34,13 @@ import TableRow from '@mui/material/TableRow'
 import TextField from '@mui/material/TextField'
 import Typography from '@mui/material/Typography'
 import { Link as RouterLink } from 'react-router'
-import { useState } from 'react'
+import { useEffect, useMemo, useRef, useState, type SyntheticEvent } from 'react'
+import type { SelectChangeEvent } from '@mui/material/Select'
 import { useUsuario } from '../../autenticacion'
 import { useMateriasBuscar } from '../../materias/api/useMaterias'
 import { usePeriodosReferencia } from '../../periodos-academicos/api/usePeriodos'
 import { ErrorState } from '../../../shared/ui/ErrorState'
+import { EmptyState } from '../../../shared/ui/EmptyState'
 import { GradeBadge } from '../../../shared/ui/GradeBadge'
 import { KpiCard } from '../../../shared/ui/KpiCard'
 import { PageHeader } from '../../../shared/ui/PageHeader'
@@ -48,6 +53,7 @@ import {
   useCalificacionesAdmin,
   useCalificacionesDocente,
   useCalificacionesEstudiante,
+  useCalificacionesDocentePorCurso,
   useDistribucionNotas,
   useEstudiantesEnRiesgo,
   useOcupacionCursos,
@@ -71,6 +77,130 @@ function correspondeAlAnio(
   const anioInicio = Number(periodo.fechaInicio.slice(0, 4))
   const anioFin = Number(periodo.fechaFin.slice(0, 4))
   return anioInicio <= anio && anioFin >= anio
+}
+
+interface MateriaOption {
+  id: number
+  nombre: string
+}
+
+interface ChartDataItem {
+  label: string
+  value: string
+  color?: string
+}
+
+function ChartDataList({ items }: { items: ChartDataItem[] }) {
+  return (
+    <Stack
+      component="ul"
+      spacing={0.75}
+      aria-label="Valores del gráfico"
+      sx={{ display: { xs: 'flex', sm: 'none' }, listStyle: 'none', p: 0, m: 0, mt: 1 }}
+    >
+      {items.map((item) => (
+        <Stack
+          component="li"
+          key={item.label}
+          direction="row"
+          spacing={1}
+          sx={{ alignItems: 'center', justifyContent: 'space-between', minWidth: 0 }}
+        >
+          <Stack direction="row" spacing={1} sx={{ alignItems: 'center', minWidth: 0 }}>
+            {item.color && (
+              <Box aria-hidden sx={{ width: 10, height: 10, flex: '0 0 auto', borderRadius: '50%', bgcolor: item.color }} />
+            )}
+            <Typography variant="body2" sx={{ overflowWrap: 'anywhere' }}>{item.label}</Typography>
+          </Stack>
+          <Typography variant="body2" sx={{ fontWeight: 600, flex: '0 0 auto', pl: 1 }}>{item.value}</Typography>
+        </Stack>
+      ))}
+    </Stack>
+  )
+}
+
+function MateriaSelector({
+  labelId,
+  materias,
+  value,
+  onChange,
+  allowAll = true,
+}: {
+  labelId: string
+  materias: MateriaOption[]
+  value: number | undefined
+  onChange: (value: number | undefined) => void
+  allowAll?: boolean
+}) {
+  const [open, setOpen] = useState(false)
+  const aperturaConMouse = useRef(false)
+  const limpiarMouseUp = useRef<(() => void) | null>(null)
+
+  useEffect(
+    () => () => {
+      limpiarMouseUp.current?.()
+    },
+    [],
+  )
+
+  const handleOpen = (event: SyntheticEvent) => {
+    setOpen(true)
+    if (event.type !== 'mousedown') return
+
+    aperturaConMouse.current = true
+    const handleMouseUp = () => {
+      limpiarMouseUp.current?.()
+      limpiarMouseUp.current = null
+      window.setTimeout(() => {
+        aperturaConMouse.current = false
+      }, 0)
+    }
+
+    document.addEventListener('mouseup', handleMouseUp, true)
+    limpiarMouseUp.current = () => document.removeEventListener('mouseup', handleMouseUp, true)
+  }
+
+  const handleClose = () => {
+    if (!aperturaConMouse.current) setOpen(false)
+  }
+
+  const handleChange = (event: SelectChangeEvent<number | ''>) => {
+    if (aperturaConMouse.current) return
+    onChange(event.target.value === '' ? undefined : Number(event.target.value))
+  }
+
+  return (
+    <FormControl size="small" sx={{ minWidth: 160 }}>
+      <InputLabel id={labelId}>Materia</InputLabel>
+      <Select<number | ''>
+        labelId={labelId}
+        label="Materia"
+        value={value ?? ''}
+        open={open}
+        onOpen={handleOpen}
+        onClose={handleClose}
+        onChange={handleChange}
+        MenuProps={{
+          anchorOrigin: { vertical: 'bottom', horizontal: 'left' },
+          transformOrigin: { vertical: 'top', horizontal: 'left' },
+          slotProps: {
+            paper: {
+              sx: {
+                maxHeight: 'min(320px, calc(100dvh - 120px))',
+                minWidth: 'min(240px, calc(100vw - 32px))',
+                maxWidth: 'calc(100vw - 32px)',
+              },
+            },
+          },
+        }}
+      >
+        {allowAll && <MenuItem value="">Todas</MenuItem>}
+        {materias.map((materia) => (
+          <MenuItem key={materia.id} value={materia.id}>{materia.nombre}</MenuItem>
+        ))}
+      </Select>
+    </FormControl>
+  )
 }
 
 function ListaCalificaciones({ query }: { query: ReturnType<typeof useCalificacionesAdmin> }) {
@@ -217,18 +347,29 @@ function DashboardAdmin() {
           <SectionCard title="Promedio por curso">
             <QueryState query={promedios} isEmpty={(data) => data.data.length === 0} emptyTitle="Sin promedios" skeletonHeight={240}>
               {(data) => (
-                <Box role="img" aria-label={`Promedios por curso: ${data.data.map((item) => `${item.curso} ${item.promedio}`).join('; ')}`}>
-                  <Box sx={{ width: '100%', height: 250 }}>
+                <Box role="group" aria-label={`Promedios por curso: ${data.data.map((item) => `${item.curso} ${item.promedio}`).join('; ')}`}>
+                  <Box sx={{ display: { xs: 'none', sm: 'block' }, width: '100%', height: 250 }}>
                     <ResponsiveContainer width="100%" height="100%">
                       <BarChart data={data.data} margin={{ top: 12, right: 12, left: 0, bottom: 8 }}>
                         <CartesianGrid stroke={colors.divider} strokeDasharray="3 3" vertical={false} />
                         <XAxis dataKey="curso" tick={{ fill: colors.text.secondary, fontSize: 12 }} />
                         <YAxis domain={[0, 100]} tick={{ fill: colors.text.secondary, fontSize: 12 }} />
                         <Tooltip formatter={(value) => [formatNota(Number(value)), 'Promedio']} />
-                        <Bar dataKey="promedio" name="Promedio" fill={chartColors[0]} radius={[4, 4, 0, 0]} />
+                        <Bar dataKey="promedio" name="Promedio" radius={[4, 4, 0, 0]}>
+                          {data.data.map((item, index) => (
+                            <Cell key={item.cursoId} fill={chartColors[index % chartColors.length]} />
+                          ))}
+                        </Bar>
                       </BarChart>
                     </ResponsiveContainer>
                   </Box>
+                  <ChartDataList
+                    items={data.data.map((item, index) => ({
+                      label: item.curso,
+                      value: formatNota(item.promedio),
+                      color: chartColors[index % chartColors.length],
+                    }))}
+                  />
                 </Box>
               )}
             </QueryState>
@@ -239,19 +380,18 @@ function DashboardAdmin() {
           <SectionCard
             title="Distribución de notas"
             actions={
-              <FormControl size="small" sx={{ minWidth: 160 }}>
-                <InputLabel id="materia-dashboard">Materia</InputLabel>
-                <Select<number | ''> labelId="materia-dashboard" label="Materia" value={materiaId ?? ''} onChange={(event) => setMateriaId(event.target.value === '' ? undefined : Number(event.target.value))}>
-                  <MenuItem value="">Todas</MenuItem>
-                  {materias.data?.map((materia) => <MenuItem key={materia.id} value={materia.id}>{materia.nombre}</MenuItem>)}
-                </Select>
-              </FormControl>
+              <MateriaSelector
+                labelId="materia-dashboard"
+                materias={materias.data ?? []}
+                value={materiaId}
+                onChange={setMateriaId}
+              />
             }
           >
             <QueryState query={distribucion} isEmpty={(data) => data.data.every((item) => item.cantidad === 0)} emptyTitle="Sin calificaciones" skeletonHeight={240}>
               {(data) => (
-                <Box role="img" aria-label={`Distribución de notas: ${data.data.map((item) => `${item.rango} ${item.cantidad}`).join('; ')}`}>
-                  <Box sx={{ width: '100%', height: 250 }}>
+                <Box role="group" aria-label={`Distribución de notas: ${data.data.map((item) => `${item.rango} ${item.cantidad}`).join('; ')}`}>
+                  <Box sx={{ display: { xs: 'none', sm: 'block' }, width: '100%', height: 250 }}>
                     <ResponsiveContainer width="100%" height="100%">
                       <BarChart data={data.data} margin={{ top: 12, right: 12, left: 0, bottom: 8 }}>
                         <CartesianGrid stroke={colors.divider} strokeDasharray="3 3" vertical={false} />
@@ -274,6 +414,17 @@ function DashboardAdmin() {
                       </BarChart>
                     </ResponsiveContainer>
                   </Box>
+                  <ChartDataList
+                    items={data.data.map((item) => ({
+                      label: item.rango,
+                      value: String(item.cantidad),
+                      color:
+                        item.rango === '0-50' ? colors.error.main
+                          : item.rango === '51-70' ? colors.warning.main
+                            : item.rango === '71-85' ? colors.info.main
+                              : colors.success.main,
+                    }))}
+                  />
                 </Box>
               )}
             </QueryState>
@@ -320,89 +471,260 @@ function DashboardAdmin() {
   )
 }
 
+function CursoDocenteCard({
+  docenteId,
+  curso,
+  seleccionado,
+  onSelect,
+}: {
+  docenteId: number
+  curso: { id: number; nombre: string }
+  seleccionado: boolean
+  onSelect: () => void
+}) {
+  const query = useCalificacionesDocentePorCurso(docenteId, curso.id, 1)
+
+  return (
+    <Card variant="outlined" sx={{ borderColor: seleccionado ? 'primary.main' : 'divider' }}>
+      <CardActionArea onClick={onSelect} aria-pressed={seleccionado}>
+        <CardContent>
+          <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>{curso.nombre}</Typography>
+          {query.isPending ? (
+            <Typography variant="body2" color="text.secondary">Cargando calificaciones…</Typography>
+          ) : query.isError ? (
+            <ErrorState error={query.error} onRetry={() => void query.refetch()} />
+          ) : (
+            <Typography variant="body2" color="text.secondary">
+              {query.data.meta.total} calificaciones registradas
+            </Typography>
+          )}
+        </CardContent>
+      </CardActionArea>
+    </Card>
+  )
+}
+
 function DashboardDocente() {
   const usuario = useUsuario()
   const resumen = useResumenDocente(usuario.docenteId)
-  const calificaciones = useCalificacionesDocente(usuario.docenteId)
+  const cursosConCalificaciones = useCalificacionesDocente(usuario.docenteId)
   const [materiaId, setMateriaId] = useState<number | undefined>(undefined)
-  const distribucion = useDistribucionNotas(undefined, materiaId)
+  const [cursoId, setCursoId] = useState<number | undefined>(undefined)
+  const materias = resumen.data?.materias ?? []
+  const cursos = useMemo(() => {
+    const cursosUnicos = new Map<number, string>()
+    for (const calificacion of cursosConCalificaciones.data?.data ?? []) {
+      const curso = calificacion.inscripcion.curso
+      if (curso) cursosUnicos.set(curso.id, curso.nombre)
+    }
+    return [...cursosUnicos].map(([id, nombre]) => ({ id, nombre }))
+  }, [cursosConCalificaciones.data?.data])
+  const cursoSeleccionadoId = cursos.some((curso) => curso.id === cursoId) ? cursoId : cursos[0]?.id
+  const calificaciones = useCalificacionesDocentePorCurso(
+    usuario.docenteId ?? 0,
+    cursoSeleccionadoId ?? 0,
+    10,
+  )
+  const materiaSeleccionadaId = materias.some((materia) => materia.materiaId === materiaId)
+    ? materiaId
+    : materias[0]?.materiaId
+  const distribucion = useDistribucionNotas(
+    undefined,
+    materiaSeleccionadaId,
+    resumen.isSuccess && materiaSeleccionadaId !== undefined,
+  )
 
   return (
     <>
       <PageHeader title="Inicio" subtitle={resumen.data?.docente.nombre} actions={<Button component={RouterLink} to="/calificaciones" variant="contained" startIcon={<AddOutlined />}>Registrar calificación</Button>} />
-      <Grid component="div" container spacing={2} sx={{ mb: 3 }}>
-        <Grid component="div" size={{ xs: 12, sm: 6 }}>
-          <KpiCard label="Calificaciones registradas" value={resumen.data?.calificacionesRegistradas} loading={resumen.isPending} />
-        </Grid>
-        <Grid component="div" size={{ xs: 12, sm: 6 }}>
-          <KpiCard label="Promedio otorgado" value={resumen.data?.promedioOtorgado == null ? '—' : resumen.data.promedioOtorgado} loading={resumen.isPending} />
-        </Grid>
-      </Grid>
+      <SectionCard title="Cursos con calificaciones registradas">
+        <QueryState
+          query={cursosConCalificaciones}
+          isEmpty={(data) => data.data.length === 0}
+          emptyTitle="Aún no hay cursos con calificaciones"
+          emptyDescription="Los cursos aparecerán aquí cuando registres calificaciones."
+        >
+          {() => (
+            <Grid component="div" container spacing={1.5}>
+              {cursos.map((curso) => (
+                <Grid component="div" key={curso.id} size={{ xs: 12, sm: 6, md: 4 }}>
+                  <CursoDocenteCard
+                    docenteId={usuario.docenteId ?? 0}
+                    curso={curso}
+                    seleccionado={curso.id === cursoSeleccionadoId}
+                    onSelect={() => setCursoId(curso.id)}
+                  />
+                </Grid>
+              ))}
+            </Grid>
+          )}
+        </QueryState>
+      </SectionCard>
       <Grid component="div" container spacing={2}>
-        <Grid component="div" size={{ xs: 12, md: 5 }}>
-          <SectionCard title="Por materia">
-            <QueryState query={resumen} isEmpty={(data) => data.materias.length === 0} emptyTitle="Sin materias">
-              {(data) => (
-                <Table size="small">
-                  <TableHead><TableRow><TableCell>Materia</TableCell><TableCell align="right">Notas</TableCell><TableCell align="right">Promedio</TableCell></TableRow></TableHead>
-                  <TableBody>{data.materias.map((materia) => (
-                    <TableRow key={materia.materiaId}>
-                      <TableCell>{materia.materia ?? 'Materia'}</TableCell>
-                      <TableCell align="right">{materia.calificaciones}</TableCell>
-                      <TableCell align="right">{materia.promedio ?? '—'}</TableCell>
-                    </TableRow>
-                  ))}</TableBody>
-                </Table>
-              )}
-            </QueryState>
-          </SectionCard>
-        </Grid>
         <Grid component="div" size={{ xs: 12, md: 7 }}>
           <SectionCard
-            title="Distribución de notas"
+            title="Últimas calificaciones"
             actions={
-              <FormControl size="small" sx={{ minWidth: 160 }}>
-                <InputLabel id="docente-materia">Materia</InputLabel>
-                <Select<number | ''> labelId="docente-materia" label="Materia" value={materiaId ?? ''} onChange={(event) => setMateriaId(event.target.value === '' ? undefined : Number(event.target.value))}>
-                  <MenuItem value="">Todas</MenuItem>
-                  {resumen.data?.materias.map((materia) => <MenuItem key={materia.materiaId} value={materia.materiaId}>{materia.materia ?? 'Materia'}</MenuItem>)}
-                </Select>
-              </FormControl>
+              cursos.length > 0 ? (
+                <FormControl size="small" sx={{ minWidth: 180 }}>
+                  <InputLabel id="docente-curso-label">Curso</InputLabel>
+                  <Select
+                    labelId="docente-curso-label"
+                    label="Curso"
+                    value={cursoSeleccionadoId ?? ''}
+                    onChange={(event) => setCursoId(Number(event.target.value))}
+                  >
+                    {cursos.map((curso) => (
+                      <MenuItem key={curso.id} value={curso.id}>{curso.nombre}</MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
+              ) : null
             }
           >
-            <QueryState query={distribucion} skeletonHeight={240}>
+            {cursosConCalificaciones.isPending ? (
+              <LinearProgress aria-label="Cargando cursos" />
+            ) : cursosConCalificaciones.isError ? (
+              <ErrorState
+                error={cursosConCalificaciones.error}
+                onRetry={() => void cursosConCalificaciones.refetch()}
+              />
+            ) : cursos.length === 0 ? (
+              <EmptyState
+                title="Aún no has registrado calificaciones"
+                description="Cuando registres notas, podrás consultar las más recientes por curso."
+              />
+            ) : <QueryState
+              query={calificaciones}
+              isEmpty={(data) => data.data.length === 0}
+              emptyTitle="Este curso aún no tiene calificaciones"
+              emptyDescription="Las últimas calificaciones del curso seleccionado aparecerán aquí."
+            >
               {(data) => (
-                <Box role="img" aria-label={`Distribución: ${data.data.map((item) => `${item.rango} ${item.cantidad}`).join('; ')}`}>
-                  <Box sx={{ width: '100%', height: 250 }}>
-                    <ResponsiveContainer width="100%" height="100%">
-                      <BarChart data={data.data} margin={{ top: 12, right: 12, left: 0, bottom: 8 }}>
-                        <CartesianGrid stroke={colors.divider} strokeDasharray="3 3" vertical={false} />
-                        <XAxis dataKey="rango" tick={{ fill: colors.text.secondary, fontSize: 12 }} />
-                        <YAxis allowDecimals={false} tick={{ fill: colors.text.secondary, fontSize: 12 }} />
-                        <Tooltip formatter={(value) => [Number(value), 'Calificaciones']} />
-                        <Bar dataKey="cantidad" name="Calificaciones" radius={[4, 4, 0, 0]}>
-                          {data.data.map((item) => (
-                            <Cell
-                              key={item.rango}
-                              fill={
-                                item.rango === '0-50' ? colors.error.main
-                                  : item.rango === '51-70' ? colors.warning.main
-                                    : item.rango === '71-85' ? colors.info.main
-                                      : colors.success.main
-                              }
-                            />
-                          ))}
-                        </Bar>
-                      </BarChart>
-                    </ResponsiveContainer>
-                  </Box>
-                </Box>
+                <Stack spacing={1.5}>
+                  <Typography variant="caption" color="text.secondary">
+                    Últimas {data.data.length} de {data.meta.total} calificaciones de este curso
+                  </Typography>
+                  <Stack spacing={1}>
+                    {data.data.map((nota) => {
+                      const estudiante = nota.inscripcion.estudiante
+                      return (
+                        <Stack
+                          key={nota.id}
+                          direction="row"
+                          spacing={1}
+                          sx={{
+                            alignItems: 'center',
+                            justifyContent: 'space-between',
+                            gap: 1,
+                            p: 1,
+                            border: 1,
+                            borderColor: 'divider',
+                            borderRadius: 2,
+                          }}
+                        >
+                          <Box sx={{ minWidth: 0 }}>
+                            {estudiante ? (
+                              <Link
+                                component={RouterLink}
+                                to={`/estudiantes/${estudiante.id}`}
+                                underline="hover"
+                              >
+                                {nombreCompleto(estudiante)}
+                              </Link>
+                            ) : (
+                              <Typography variant="body2">Estudiante</Typography>
+                            )}
+                            <Typography variant="body2" color="text.secondary">
+                              {nota.materia.nombre} · {nota.tipo}
+                            </Typography>
+                          </Box>
+                          <GradeBadge nota={nota.nota} />
+                        </Stack>
+                      )
+                    })}
+                  </Stack>
+                </Stack>
               )}
-            </QueryState>
+            </QueryState>}
           </SectionCard>
         </Grid>
-        <Grid component="div" size={12}>
-          <SectionCard title="Últimas notas registradas"><ListaCalificaciones query={calificaciones} /></SectionCard>
+        <Grid component="div" size={{ xs: 12, md: 5 }}>
+          <Stack spacing={2}>
+            <SectionCard
+              title="Distribución de notas"
+              actions={
+                materias.length > 0 ? (
+                  <MateriaSelector
+                    labelId="docente-materia"
+                    materias={materias.map((materia) => ({
+                      id: materia.materiaId,
+                      nombre: materia.materia ?? 'Materia',
+                    }))}
+                    value={materiaSeleccionadaId}
+                    onChange={setMateriaId}
+                    allowAll={false}
+                  />
+                ) : null
+              }
+            >
+              {!resumen.isPending && materias.length === 0 ? (
+                <EmptyState
+                  title="Sin materias evaluadas"
+                  description="La distribución aparecerá después de registrar calificaciones."
+                />
+              ) : (
+                <QueryState query={distribucion} skeletonHeight={240}>
+                  {(data) => (
+                    <Box role="group" aria-label={`Distribución: ${data.data.map((item) => `${item.rango} ${item.cantidad}`).join('; ')}`}>
+                      <Box sx={{ display: { xs: 'none', sm: 'block' }, width: '100%', height: 250 }}>
+                        <ResponsiveContainer width="100%" height="100%">
+                          <BarChart data={data.data} margin={{ top: 12, right: 12, left: 0, bottom: 8 }}>
+                            <CartesianGrid stroke={colors.divider} strokeDasharray="3 3" vertical={false} />
+                            <XAxis dataKey="rango" tick={{ fill: colors.text.secondary, fontSize: 12 }} />
+                            <YAxis allowDecimals={false} tick={{ fill: colors.text.secondary, fontSize: 12 }} />
+                            <Tooltip formatter={(value) => [Number(value), 'Calificaciones']} />
+                            <Bar dataKey="cantidad" name="Calificaciones" radius={[4, 4, 0, 0]}>
+                              {data.data.map((item) => (
+                                <Cell
+                                  key={item.rango}
+                                  fill={
+                                    item.rango === '0-50' ? colors.error.main
+                                      : item.rango === '51-70' ? colors.warning.main
+                                        : item.rango === '71-85' ? colors.info.main
+                                          : colors.success.main
+                                  }
+                                />
+                              ))}
+                            </Bar>
+                          </BarChart>
+                        </ResponsiveContainer>
+                      </Box>
+                      <ChartDataList
+                        items={data.data.map((item) => ({
+                          label: item.rango,
+                          value: String(item.cantidad),
+                          color:
+                            item.rango === '0-50' ? colors.error.main
+                              : item.rango === '51-70' ? colors.warning.main
+                                : item.rango === '71-85' ? colors.info.main
+                                  : colors.success.main,
+                        }))}
+                      />
+                    </Box>
+                  )}
+                </QueryState>
+              )}
+            </SectionCard>
+            <SectionCard title="Seguimiento de estudiantes">
+              <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                Consulta el avance y las calificaciones individuales desde la ficha de cada estudiante.
+              </Typography>
+              <Button component={RouterLink} to="/estudiantes" variant="outlined">
+                Ver estudiantes
+              </Button>
+            </SectionCard>
+          </Stack>
         </Grid>
       </Grid>
     </>
@@ -433,8 +755,8 @@ function DashboardEstudiante() {
           <SectionCard title="Promedio por período">
             <QueryState query={resumen} isEmpty={(data) => data.porPeriodo.length === 0} emptyTitle="Sin promedios por período" skeletonHeight={260}>
               {(data) => (
-                <Box role="img" aria-label={`Promedios por período: ${data.porPeriodo.map((item) => `${item.periodo} ${formatNota(item.promedio)}`).join('; ')}`}>
-                  <Box sx={{ width: '100%', height: 280 }}>
+                <Box role="group" aria-label={`Promedios por período: ${data.porPeriodo.map((item) => `${item.periodo} ${formatNota(item.promedio)}`).join('; ')}`}>
+                  <Box sx={{ display: { xs: 'none', sm: 'block' }, width: '100%', height: 280 }}>
                     <ResponsiveContainer width="100%" height="100%">
                       <LineChart data={data.porPeriodo} margin={{ top: 12, right: 12, left: 0, bottom: 8 }}>
                         <CartesianGrid stroke={colors.divider} strokeDasharray="3 3" vertical={false} />
@@ -454,6 +776,13 @@ function DashboardEstudiante() {
                       </LineChart>
                     </ResponsiveContainer>
                   </Box>
+                  <ChartDataList
+                    items={data.porPeriodo.map((item) => ({
+                      label: item.periodo,
+                      value: formatNota(item.promedio),
+                      color: chartColors[0],
+                    }))}
+                  />
                 </Box>
               )}
             </QueryState>

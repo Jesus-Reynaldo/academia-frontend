@@ -160,9 +160,9 @@ Alineados con los rangos fijos del backend. Se muestra **el número siempre** y,
 
 ### 5.6 Paleta para gráficos (separada de la UI)
 
-Paleta categórica apta para daltonismo (basada en Okabe-Ito), para series que no son estados:
+Paleta categórica sobria de azules pizarra y teal para series que no son estados:
 
-`#0072B2` · `#E69F00` · `#009E73` · `#CC79A7` · `#56B4E9` · `#D55E00`
+`#334155` · `#3F5B73` · `#496B70` · `#58677D` · `#526B82` · `#65758B`
 
 Reglas para gráficos:
 
@@ -384,7 +384,9 @@ Resumen · Período vigente: 2026-I [Activo]                [Período ▾]
 
 ### 8.3 Inicio — DOCENTE (RF-MDO)
 
-Tarjetas: calificaciones registradas, promedio otorgado. Tabla "Por materia" (calificaciones, promedio). Gráfico de distribución con selector de materia. Atajo destacado **"Registrar calificación"**. Últimas notas registradas por el docente.
+Tarjetas: total histórico de calificaciones registradas y promedio global otorgado, con contexto explícito. Las últimas 10 calificaciones se muestran agrupadas por curso, con estudiante, materia, tipo y nota; no se vuelven a presentar los agregados por materia junto al gráfico. La distribución se filtra por materia cuando el docente tiene varias; con una sola materia se selecciona automáticamente. Atajo destacado **"Registrar calificación"** y acceso a estudiantes para consultar sus fichas.
+
+> La API actual solo calcula agregados globales y por materia para DOCENTE. No calcular promedios por curso ni marcar estudiantes en riesgo en el cliente; para esas métricas se requiere ampliar el endpoint del servidor.
 
 ### 8.4 Inicio — ESTUDIANTE / Mis datos (RF-MIS)
 
@@ -620,6 +622,6 @@ Investigación web (los sitios secundarios se usaron como orientación; las cifr
 - Accesibilidad / WCAG 2.2: [Yale — WCAG 2 A and AA Checklist (Designers)](https://usability.yale.edu/web-accessibility/articles/wcag2-checklist/designers) · [Allyant — Color and contrast for accessibility](https://allyant.com/blog/color-and-contrast-for-accessibility/) · [Stark — Use of Color (1.4.1)](https://www.getstark.co/wcag-explained/perceivable/distinguishable/use-of-color/) · [Stark — Non-text contrast (1.4.11)](https://getstark.co/wcag-explained/perceivable/distinguishable/non-text-contrast) · [Chi — Color & sensory](https://lib.lumen.com/chi/6.29.0/foundations/accessibility/color-sensory) · [W3C — WCAG 2.2](https://www.w3.org/TR/WCAG22/)
 - Tema MUI, variables CSS y modo oscuro: [MUI — CSS theme variables](https://mui.com/material-ui/customization/css-theme-variables/configuration/) · [MUI — Dark mode](https://mui.com/material-ui/customization/dark-mode)
 - Screaming Architecture / organización por features en React: [Folder structures (GitHub)](https://github.com/ahmad2point0/folder-structures) · [Best Practices for Folder Structure in React](https://namastedev.com/blog/best-practices-for-folder-structure-in-react-3/) · [Screaming architecture (guía)](https://sharedcontext.ai/skills/external/joabgonzalez/screaming-architecture)
-- Paleta categórica apta para daltonismo: Okabe & Ito (2008), *Color Universal Design*.
+- Paleta categórica sobria de azules pizarra y teal, diferenciada de los colores semánticos de estados.
 
 Documentos del proyecto: `backend-notas/doc/dashboard-requirements.md`, `requirements.md`, `backend-proposals.md`, `prisma/schema.prisma`, `CLAUDE.md`.

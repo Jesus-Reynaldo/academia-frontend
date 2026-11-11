@@ -85,8 +85,16 @@ export function useResumenDocente(id: number | null) {
 
 export function useCalificacionesDocente(id: number | null) {
   return useQuery({
-    queryKey: [...dashboardKeys.all, 'calificaciones-docente', id],
+    queryKey: [...dashboardKeys.all, 'calificaciones-docente', id, 100],
     queryFn: () => dashboardApi.calificacionesDocente(id as number),
     enabled: id !== null,
+  })
+}
+
+export function useCalificacionesDocentePorCurso(id: number, cursoId: number, limit: number) {
+  return useQuery({
+    queryKey: [...dashboardKeys.all, 'calificaciones-docente', id, 'curso', cursoId, limit],
+    queryFn: () => dashboardApi.calificacionesDocentePorCurso(id, cursoId, limit),
+    enabled: id > 0 && cursoId > 0,
   })
 }

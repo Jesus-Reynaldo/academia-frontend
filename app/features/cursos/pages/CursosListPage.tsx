@@ -22,7 +22,7 @@ import { CursoFormDialog } from '../components/CursoFormDialog'
 import { CursoRowMenu } from '../components/CursoRowMenu'
 import { EliminarCursoDialog } from '../components/EliminarCursoDialog'
 import { OcupacionCurso } from '../components/OcupacionCurso'
-import { usePaginaEnRango } from '../model/usePaginaEnRango'
+import { usePaginaEnRango } from '../../../shared/hooks/usePaginaEnRango'
 import {
   CAMPOS_ORDENABLES,
   ESTADOS_CURSO,

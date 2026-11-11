@@ -1,5 +1,5 @@
 import { useEffect } from 'react'
-import type { PaginationMeta } from '../../../shared/api/pagination'
+import type { PaginationMeta } from '../api/pagination'
 
 /**
  * Un enlace con una página que ya no existe devolvería filas vacías con total > 0: lleva al usuario a la

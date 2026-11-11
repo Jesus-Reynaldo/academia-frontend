@@ -43,7 +43,11 @@ export const dashboardApi = {
     }),
   calificacionesDocente: (id: number) =>
     apiFetch<Paginated<CalificacionDashboard>>(`/docentes/${id}/calificaciones`, {
-      query: { page: 1, limit: 10, order: 'desc' },
+      query: { page: 1, limit: 100, order: 'desc' },
+    }),
+  calificacionesDocentePorCurso: (id: number, cursoId: number, limit: number) =>
+    apiFetch<Paginated<CalificacionDashboard>>('/calificaciones', {
+      query: { docenteId: id, cursoId, page: 1, limit, sortBy: 'id', order: 'desc' },
     }),
   calificacionesEstudiante: (id: number) =>
     apiFetch<Paginated<CalificacionDashboard>>(`/estudiantes/${id}/calificaciones`, {
