@@ -11,14 +11,20 @@ import CardContent from '@mui/material/CardContent'
 import CircularProgress from '@mui/material/CircularProgress'
 import Grid from '@mui/material/Grid'
 import Stack from '@mui/material/Stack'
+import Table from '@mui/material/Table'
+import TableBody from '@mui/material/TableBody'
+import TableCell from '@mui/material/TableCell'
+import TableContainer from '@mui/material/TableContainer'
+import TableHead from '@mui/material/TableHead'
+import TableRow from '@mui/material/TableRow'
 import Tab from '@mui/material/Tab'
 import Tabs from '@mui/material/Tabs'
 import Typography from '@mui/material/Typography'
 import { useMemo, useState } from 'react'
 import { ApiError } from '../../../shared/api/errors'
+import { NOTA_APROBACION } from '../../../shared/config/env'
 import { formatNota } from '../../../shared/lib/format'
 import { EmptyState } from '../../../shared/ui/EmptyState'
-import { GradeBadge } from '../../../shared/ui/GradeBadge'
 import { PageHeader } from '../../../shared/ui/PageHeader'
 import { QueryState } from '../../../shared/ui/QueryState'
 import { useHistorialAcademico } from '../api/useHistorialAcademico'
@@ -49,6 +55,29 @@ function agruparPeriodos(historial: HistorialAcademico): HistorialPeriodo[] {
   return [...grupos.values()]
 }
 
+function colorNota(nota: number | null) {
+  return nota !== null && nota < NOTA_APROBACION ? 'error.main' : 'text.primary'
+}
+
+function CeldaNotas({ notas }: { notas: number[] }) {
+  if (notas.length === 0) return <>—</>
+
+  return (
+    <Box sx={{ display: 'grid', gap: 0.25 }}>
+      {notas.map((nota, index) => (
+        <Typography
+          component="span"
+          variant="body2"
+          key={`${nota}-${index}`}
+          sx={{ color: colorNota(nota), whiteSpace: 'nowrap' }}
+        >
+          {formatNota(nota)}
+        </Typography>
+      ))}
+    </Box>
+  )
+}
+
 function CursoHistorial({ curso, indice }: { curso: HistorialCurso; indice: number }) {
   return (
     <Accordion defaultExpanded={indice === 0} disableGutters>
@@ -60,7 +89,10 @@ function CursoHistorial({ curso, indice }: { curso: HistorialCurso; indice: numb
         >
           <Typography variant="h3" component="h3">{curso.curso}</Typography>
           <Typography variant="body2" color="text.secondary">
-            Promedio del curso: <strong>{formatNota(curso.promedio)}</strong>
+            Promedio del curso:{' '}
+            <Box component="strong" sx={{ color: colorNota(curso.promedio) }}>
+              {formatNota(curso.promedio)}
+            </Box>
           </Typography>
         </Stack>
       </AccordionSummary>
@@ -70,55 +102,91 @@ function CursoHistorial({ curso, indice }: { curso: HistorialCurso; indice: numb
             No hay calificaciones registradas en este curso.
           </Typography>
         ) : (
-          <Stack spacing={1.5}>
-            {curso.materias.map((materia) => (
-              <Card key={materia.materiaId} variant="outlined">
-                <CardContent sx={{ '&:last-child': { pb: 2 } }}>
-                  <Stack
-                    direction={{ xs: 'column', sm: 'row' }}
-                    spacing={1}
-                    sx={{ alignItems: { sm: 'center' }, justifyContent: 'space-between', mb: 1.5 }}
-                  >
-                    <Typography variant="h3" component="h4">{materia.materia}</Typography>
-                    <Typography variant="body2">
-                      Promedio: <strong>{formatNota(materia.promedio)}</strong>
-                    </Typography>
-                  </Stack>
-                  {materia.calificaciones.length === 0 ? (
-                    <Typography variant="body2" color="text.secondary">
-                      Sin evaluaciones registradas.
-                    </Typography>
-                  ) : (
-                    <Grid component="ul" container spacing={1} sx={{ listStyle: 'none', p: 0, m: 0 }}>
-                      {materia.calificaciones.map((calificacion, index) => (
-                        <Grid
-                          component="li"
-                          size={{ xs: 12, sm: 6, md: 4 }}
-                          key={`${materia.materiaId}-${calificacion.tipo}-${index}`}
-                        >
-                          <Stack
-                            direction="row"
-                            spacing={1}
-                            sx={{
-                              alignItems: 'center',
-                              justifyContent: 'space-between',
-                              p: 1,
-                              border: 1,
-                              borderColor: 'divider',
-                              borderRadius: 1,
-                            }}
-                          >
-                            <Typography variant="body2">{calificacion.tipo}</Typography>
-                            <GradeBadge nota={calificacion.nota} />
-                          </Stack>
-                        </Grid>
+          <TableContainer>
+            <Table
+              size="small"
+              aria-label={`Historial de calificaciones de ${curso.curso}`}
+              sx={{ minWidth: 1050 }}
+            >
+              <TableHead>
+                <TableRow sx={{ bgcolor: 'action.hover' }}>
+                  <TableCell rowSpan={2}>Materia</TableCell>
+                  <TableCell align="center" colSpan={3}>Parciales</TableCell>
+                  <TableCell align="center" rowSpan={2}>Prácticas</TableCell>
+                  <TableCell align="center" rowSpan={2}>Ponderado</TableCell>
+                  <TableCell align="center" rowSpan={2}>Nota pre-final</TableCell>
+                  <TableCell align="center" rowSpan={2}>Examen final</TableCell>
+                  <TableCell align="center" rowSpan={2}>Nota final</TableCell>
+                  <TableCell align="center" rowSpan={2}>Promedio final</TableCell>
+                  <TableCell align="center" rowSpan={2}>Otras evaluaciones</TableCell>
+                </TableRow>
+                <TableRow sx={{ bgcolor: 'action.hover' }}>
+                  <TableCell align="center">1ro</TableCell>
+                  <TableCell align="center">2do</TableCell>
+                  <TableCell align="center">3ero</TableCell>
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {curso.materias.map((materia) => {
+                  const parciales = materia.calificaciones
+                    .filter((calificacion) => calificacion.tipo === 'PARCIAL')
+                    .map((calificacion) => calificacion.nota)
+                  const practicas = materia.calificaciones
+                    .filter((calificacion) => calificacion.tipo === 'PRACTICA')
+                    .map((calificacion) => calificacion.nota)
+                  const examenesFinales = materia.calificaciones
+                    .filter((calificacion) => calificacion.tipo === 'FINAL')
+                    .map((calificacion) => calificacion.nota)
+                  const otrasEvaluaciones = materia.calificaciones
+                    .filter((calificacion) => calificacion.tipo !== 'PARCIAL'
+                      && calificacion.tipo !== 'PRACTICA'
+                      && calificacion.tipo !== 'FINAL')
+                    .map((calificacion) => ({
+                      tipo: calificacion.tipo,
+                      nota: calificacion.nota,
+                    }))
+                  parciales.slice(3).forEach((nota, index) => {
+                    otrasEvaluaciones.push({ tipo: `Parcial adicional ${index + 4}`, nota })
+                  })
+
+                  return (
+                    <TableRow key={materia.materiaId}>
+                      <TableCell sx={{ fontWeight: 600, minWidth: 180 }}>{materia.materia}</TableCell>
+                      {[0, 1, 2].map((indice) => (
+                        <TableCell key={indice} align="center">
+                          <CeldaNotas notas={parciales.slice(indice, indice + 1)} />
+                        </TableCell>
                       ))}
-                    </Grid>
-                  )}
-                </CardContent>
-              </Card>
-            ))}
-          </Stack>
+                      <TableCell align="center"><CeldaNotas notas={practicas} /></TableCell>
+                      <TableCell align="center">—</TableCell>
+                      <TableCell align="center">—</TableCell>
+                      <TableCell align="center"><CeldaNotas notas={examenesFinales} /></TableCell>
+                      <TableCell align="center">—</TableCell>
+                      <TableCell align="center" sx={{ color: colorNota(materia.promedio), fontWeight: 600 }}>
+                        {formatNota(materia.promedio)}
+                      </TableCell>
+                      <TableCell align="center">
+                        {otrasEvaluaciones.length === 0 ? '—' : (
+                          <Box sx={{ display: 'grid', gap: 0.25 }}>
+                            {otrasEvaluaciones.map((evaluacion, index) => (
+                              <Typography
+                                component="span"
+                                variant="body2"
+                                key={`${evaluacion.tipo}-${index}`}
+                                sx={{ color: colorNota(evaluacion.nota), whiteSpace: 'nowrap' }}
+                              >
+                                {evaluacion.tipo}: {formatNota(evaluacion.nota)}
+                              </Typography>
+                            ))}
+                          </Box>
+                        )}
+                      </TableCell>
+                    </TableRow>
+                  )
+                })}
+              </TableBody>
+            </Table>
+          </TableContainer>
         )}
       </AccordionDetails>
     </Accordion>
@@ -214,9 +282,18 @@ function HistorialContenido({ historial, showTitle }: { historial: HistorialAcad
             </Grid>
             <Grid component="div" size={{ xs: 12, sm: 3 }}>
               <Typography component="dt" variant="body2" color="text.secondary">Promedio general</Typography>
-              <Box component="dd" sx={{ m: 0 }}>
-                <GradeBadge nota={historial.promedioGeneral} />
-              </Box>
+              <Typography
+                component="dd"
+                sx={{
+                  m: 0,
+                  fontWeight: 600,
+                  color: historial.promedioGeneral !== null && historial.promedioGeneral < NOTA_APROBACION
+                    ? 'error.main'
+                    : 'text.primary',
+                }}
+              >
+                {formatNota(historial.promedioGeneral)}
+              </Typography>
             </Grid>
           </Grid>
         </CardContent>
