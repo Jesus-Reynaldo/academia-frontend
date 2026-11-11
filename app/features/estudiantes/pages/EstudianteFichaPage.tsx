@@ -28,10 +28,11 @@ import { CalificacionesDelEstudiante } from '../components/CalificacionesDelEstu
 import { EliminarEstudianteDialog } from '../components/EliminarEstudianteDialog'
 import { EstudianteFormDialog } from '../components/EstudianteFormDialog'
 import { InscripcionesDelEstudiante } from '../components/InscripcionesDelEstudiante'
+import { HistorialAcademicoPage } from '../../historial-academico'
 import type { PaginaFichaParams } from '../model/types'
 
 const LIMITES = [10, 20, 50]
-const PESTANAS = ['datos', 'inscripciones', 'calificaciones'] as const
+const PESTANAS = ['datos', 'inscripciones', 'calificaciones', 'historial'] as const
 type Pestana = (typeof PESTANAS)[number]
 
 function leerPagina(searchParams: URLSearchParams): PaginaFichaParams {
@@ -152,6 +153,7 @@ export function EstudianteFichaPage({ id }: { id: number }) {
               <Tab label="Datos" value="datos" id="tab-datos" aria-controls="panel-datos" />
               <Tab label="Inscripciones" value="inscripciones" id="tab-inscripciones" aria-controls="panel-inscripciones" />
               <Tab label="Calificaciones" value="calificaciones" id="tab-calificaciones" aria-controls="panel-calificaciones" />
+              <Tab label="Historial" value="historial" id="tab-historial" aria-controls="panel-historial" />
             </Tabs>
 
             <Box role="tabpanel" id={`panel-${tab}`} aria-labelledby={`tab-${tab}`}>
@@ -178,6 +180,9 @@ export function EstudianteFichaPage({ id }: { id: number }) {
               )}
               {tab === 'calificaciones' && (
                 <CalificacionesDelEstudiante estudianteId={estudiante.id} params={pagina} onChange={updateParams} />
+              )}
+              {tab === 'historial' && (
+                <HistorialAcademicoPage estudianteId={estudiante.id} showTitle={false} />
               )}
             </Box>
 

@@ -11,35 +11,44 @@ export function useAdminResumen() {
   return useQuery({ queryKey: [...dashboardKeys.all, 'resumen'], queryFn: dashboardApi.resumenAdmin })
 }
 
-export function useOcupacionCursos(periodoId?: number) {
+export function useOcupacionCursos(periodoId?: number, enabled = true) {
   return useQuery({
     queryKey: [...dashboardKeys.admin(periodoId), 'ocupacion'],
     queryFn: () => dashboardApi.ocupacionCursos(periodoId),
     placeholderData: keepPreviousData,
+    enabled,
   })
 }
 
-export function usePromediosCursos(periodoId?: number) {
+export function usePromediosCursos(periodoId?: number, enabled = true) {
   return useQuery({
     queryKey: [...dashboardKeys.admin(periodoId), 'promedios'],
     queryFn: () => dashboardApi.promediosCursos(periodoId),
     placeholderData: keepPreviousData,
+    enabled,
   })
 }
 
-export function useDistribucionNotas(periodoId?: number, materiaId?: number) {
+export function useDistribucionNotas(periodoId?: number, materiaId?: number, enabled = true) {
   return useQuery({
     queryKey: [...dashboardKeys.admin(periodoId, materiaId), 'distribucion'],
     queryFn: () => dashboardApi.distribucionNotas(periodoId, materiaId),
     placeholderData: keepPreviousData,
+    enabled,
   })
 }
 
-export function useEstudiantesEnRiesgo(periodoId: number | undefined, umbral: number, page: number) {
+export function useEstudiantesEnRiesgo(
+  periodoId: number | undefined,
+  umbral: number,
+  page: number,
+  enabled = true,
+) {
   return useQuery({
     queryKey: dashboardKeys.admin(periodoId, undefined, umbral, page),
     queryFn: () => dashboardApi.estudiantesEnRiesgo(periodoId, umbral, page),
     placeholderData: keepPreviousData,
+    enabled,
   })
 }
 
@@ -76,8 +85,16 @@ export function useResumenDocente(id: number | null) {
 
 export function useCalificacionesDocente(id: number | null) {
   return useQuery({
-    queryKey: [...dashboardKeys.all, 'calificaciones-docente', id],
+    queryKey: [...dashboardKeys.all, 'calificaciones-docente', id, 100],
     queryFn: () => dashboardApi.calificacionesDocente(id as number),
     enabled: id !== null,
+  })
+}
+
+export function useCalificacionesDocentePorCurso(id: number, cursoId: number, limit: number) {
+  return useQuery({
+    queryKey: [...dashboardKeys.all, 'calificaciones-docente', id, 'curso', cursoId, limit],
+    queryFn: () => dashboardApi.calificacionesDocentePorCurso(id, cursoId, limit),
+    enabled: id > 0 && cursoId > 0,
   })
 }

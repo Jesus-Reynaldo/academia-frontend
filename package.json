@@ -16,15 +16,15 @@
     "@hookform/resolvers": "^6.0.2",
     "@mui/icons-material": "^9.5.0",
     "@mui/material": "^9.5.0",
-    "@mui/x-charts": "^9.17.0",
     "@react-router/node": "^8.5.1",
     "@tanstack/react-query": "^5.105.0",
+    "isbot": "^5",
     "react": "^19.3.1",
     "react-dom": "^19.3.1",
     "react-hook-form": "^7.91.0",
     "react-router": "^8.5.1",
-    "zod": "^4.6.7",
-    "isbot": "^5"
+    "recharts": "^3.10.1",
+    "zod": "^4.6.7"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",

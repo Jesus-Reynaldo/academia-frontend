@@ -13,7 +13,7 @@ export const colors = {
   neutral: { main: '#475569', tint: '#F1F5F9' },
 } as const
 
-/** Paleta categórica apta para daltonismo (Okabe-Ito) para series de gráficos que no son estados. */
-export const chartColors = ['#0072B2', '#E69F00', '#009E73', '#CC79A7', '#56B4E9', '#D55E00'] as const
+/** Paleta sobria azul pizarra y teal para series de gráficos que no son estados. */
+export const chartColors = ['#334155', '#3F5B73', '#496B70', '#58677D', '#526B82', '#65758B'] as const
 
 export const SIDEBAR_WIDTH = 248

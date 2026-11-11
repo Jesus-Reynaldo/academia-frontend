@@ -12,7 +12,7 @@
 | Producto | Dashboard web del Sistema Académico: estudiantes, docentes, cursos, materias, períodos, inscripciones y calificaciones | Spec del backend |
 | Usuarios | 3 roles con experiencias distintas: **ADMIN**, **DOCENTE**, **ESTUDIANTE** | El menú y las pantallas se construyen según `usuario.rol` (RF-AUTH-05) |
 | Stack ya instalado | React 19, React Router (modo framework), TanStack Query, MUI 9 + Emotion, TypeScript | Estado actual del repo |
-| Librería de UI | **MUI** (+ MUI X Charts) como base de componentes, con un tema propio (no el aspecto Material por defecto) | Ya instalada; accesible y con tabla, diálogos, formularios y date pickers maduros |
+| Librería de UI | **MUI** como base de componentes y **Recharts** para gráficos, con un tema propio (no el aspecto Material por defecto) | MUI ofrece componentes accesibles; Recharts permite gráficos responsivos |
 | Arquitectura de código | **Screaming Architecture** (carpetas por dominio académico, no por tipo técnico) | Solicitado; ver sección 12 |
 | Idioma | Interfaz en español; términos del dominio igual que la API (`Estudiante`, `Inscripción`, `Calificación`) | El dominio y los mensajes del servidor ya están en español |
 | Tono visual | Sobrio, confiable y legible: herramienta de trabajo diaria, no una web de marketing | Admin/docente pasan horas en la herramienta; la investigación apunta a paletas más calmadas en áreas de gestión |
@@ -24,7 +24,7 @@
 | D1 | Modo de render | **SPA** (`ssr: false`). El JWT vive en el navegador y las rutas protegidas se resuelven en el cliente. Ya configurado en `react-router.config.ts`. |
 | D2 | Marca institucional | **Ninguna por ahora.** Se usa la paleta propuesta (índigo `#2740B8`); cambiar la marca solo requiere editar los tokens del tema. |
 | D3 | Plataforma | **Solo web responsive** (sin app móvil ni flujos específicos). Debe usarse bien desde 360 px, pero el diseño prioriza escritorio. |
-| D4 | Formularios y gráficos | **React Hook Form + Zod** y **MUI X Charts** (instalados). |
+| D4 | Formularios y gráficos | **React Hook Form + Zod** y **Recharts**. |
 | D5 | Modo oscuro | **Fuera de alcance.** Solo tema claro. Se conserva la estructura de tokens para poder añadirlo en el futuro. |
 | D6 | Reparto del trabajo | El **docente** entrega: login, layout con menú lateral por rol, dependencias, plan UI/UX y arquitectura. Los **estudiantes** implementan el resto, **incluido el dashboard de Inicio** (ver sección 14). |
 
@@ -160,9 +160,9 @@ Alineados con los rangos fijos del backend. Se muestra **el número siempre** y,
 
 ### 5.6 Paleta para gráficos (separada de la UI)
 
-Paleta categórica apta para daltonismo (basada en Okabe-Ito), para series que no son estados:
+Paleta categórica sobria de azules pizarra y teal para series que no son estados:
 
-`#0072B2` · `#E69F00` · `#009E73` · `#CC79A7` · `#56B4E9` · `#D55E00`
+`#334155` · `#3F5B73` · `#496B70` · `#58677D` · `#526B82` · `#65758B`
 
 Reglas para gráficos:
 
@@ -170,7 +170,7 @@ Reglas para gráficos:
 - Ocupación de curso: barra con relleno primario; ≥ 90 % pasa a ámbar y 100 % a rojo (con texto "Lleno").
 - Siempre: título, etiquetas directas o leyenda, valores accesibles en tooltip y una **tabla/lista alternativa** para lectores de pantalla.
 - Sin 3D, sin pasteles de más de 4 porciones, ejes que arrancan en 0 para barras.
-- Librería: **MUI X Charts** (mismo ecosistema/tema).
+- Librería: **Recharts**; gráficos responsivos con colores de `shared/theme/tokens`.
 
 ### 5.7 Modo oscuro — fuera de alcance
 
@@ -378,13 +378,15 @@ Resumen · Período vigente: 2026-I [Activo]                [Período ▾]
 ```
 
 - 5 `KpiCard`; si `periodoActivo` es `null` → tarjeta "Sin período activo" con enlace a Períodos.
-- Cada bloque con carga/vacío/error **independientes** (RF-INI-06). Selector de período afecta a ocupación, promedios, distribución y riesgo.
+- Cada bloque con carga/vacío/error **independientes** (RF-INI-06). El selector inicia en el período del año calendario actual (si hay más de uno, prefiere el activo); si no existe, usa el período activo disponible. El usuario puede elegir otro período. La selección afecta a ocupación, promedios, distribución y riesgo.
 - Riesgo: control numérico/slider del `umbral` (por defecto 51), lista paginada, cada fila enlaza a la ficha.
 - Ocupación: barra con texto "28/30 · 93 %"; sin capacidad (`porcentaje: null`) muestra solo "28 inscritos".
 
 ### 8.3 Inicio — DOCENTE (RF-MDO)
 
-Tarjetas: calificaciones registradas, promedio otorgado. Tabla "Por materia" (calificaciones, promedio). Gráfico de distribución con selector de materia. Atajo destacado **"Registrar calificación"**. Últimas notas registradas por el docente.
+Tarjetas: total histórico de calificaciones registradas y promedio global otorgado, con contexto explícito. Las últimas 10 calificaciones se muestran agrupadas por curso, con estudiante, materia, tipo y nota; no se vuelven a presentar los agregados por materia junto al gráfico. La distribución se filtra por materia cuando el docente tiene varias; con una sola materia se selecciona automáticamente. Atajo destacado **"Registrar calificación"** y acceso a estudiantes para consultar sus fichas.
+
+> La API actual solo calcula agregados globales y por materia para DOCENTE. No calcular promedios por curso ni marcar estudiantes en riesgo en el cliente; para esas métricas se requiere ampliar el endpoint del servidor.
 
 ### 8.4 Inicio — ESTUDIANTE / Mis datos (RF-MIS)
 
@@ -605,7 +607,7 @@ app/
 
 ## 15. Decisiones
 
-Resueltas (ver 1.1): SPA, sin marca institucional, solo web responsive, React Hook Form + Zod, MUI X Charts, sin modo oscuro, reparto docente/estudiantes.
+Resueltas (ver 1.1): SPA, sin marca institucional, solo web responsive, React Hook Form + Zod, Recharts, sin modo oscuro, reparto docente/estudiantes.
 
 Pendiente (opcional): **Storybook** como catálogo de `shared/ui`. No está instalado; solo se añadiría si hay tiempo.
 
@@ -620,6 +622,6 @@ Investigación web (los sitios secundarios se usaron como orientación; las cifr
 - Accesibilidad / WCAG 2.2: [Yale — WCAG 2 A and AA Checklist (Designers)](https://usability.yale.edu/web-accessibility/articles/wcag2-checklist/designers) · [Allyant — Color and contrast for accessibility](https://allyant.com/blog/color-and-contrast-for-accessibility/) · [Stark — Use of Color (1.4.1)](https://www.getstark.co/wcag-explained/perceivable/distinguishable/use-of-color/) · [Stark — Non-text contrast (1.4.11)](https://getstark.co/wcag-explained/perceivable/distinguishable/non-text-contrast) · [Chi — Color & sensory](https://lib.lumen.com/chi/6.29.0/foundations/accessibility/color-sensory) · [W3C — WCAG 2.2](https://www.w3.org/TR/WCAG22/)
 - Tema MUI, variables CSS y modo oscuro: [MUI — CSS theme variables](https://mui.com/material-ui/customization/css-theme-variables/configuration/) · [MUI — Dark mode](https://mui.com/material-ui/customization/dark-mode)
 - Screaming Architecture / organización por features en React: [Folder structures (GitHub)](https://github.com/ahmad2point0/folder-structures) · [Best Practices for Folder Structure in React](https://namastedev.com/blog/best-practices-for-folder-structure-in-react-3/) · [Screaming architecture (guía)](https://sharedcontext.ai/skills/external/joabgonzalez/screaming-architecture)
-- Paleta categórica apta para daltonismo: Okabe & Ito (2008), *Color Universal Design*.
+- Paleta categórica sobria de azules pizarra y teal, diferenciada de los colores semánticos de estados.
 
 Documentos del proyecto: `backend-notas/doc/dashboard-requirements.md`, `requirements.md`, `backend-proposals.md`, `prisma/schema.prisma`, `CLAUDE.md`.
