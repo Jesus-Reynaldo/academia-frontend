@@ -108,6 +108,8 @@ export function DataTable<T>({
       onPageChange={(_, zeroBased) => pagination.onPageChange(zeroBased + 1)}
       onRowsPerPageChange={(event) => pagination.onLimitChange(Number(event.target.value))}
       labelRowsPerPage="Filas:"
+      // Objetivos táctiles de al menos 44 px (WCAG 2.5.8).
+      sx={{ '& .MuiTablePagination-actions .MuiIconButton-root': { width: 44, height: 44 }, '& .MuiTablePagination-select': { minHeight: 32, display: 'flex', alignItems: 'center' } }}
       labelDisplayedRows={({ from, to, count }) => `${from}–${to} de ${count}`}
       getItemAriaLabel={(type) =>
         ({

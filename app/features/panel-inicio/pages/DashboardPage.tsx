@@ -3,15 +3,12 @@ import {
   BarChart,
   CartesianGrid,
   Cell,
-  Line,
-  LineChart,
   ResponsiveContainer,
   Tooltip,
   XAxis,
   YAxis,
 } from 'recharts'
 import AddOutlined from '@mui/icons-material/AddOutlined'
-import SchoolOutlined from '@mui/icons-material/SchoolOutlined'
 import Box from '@mui/material/Box'
 import Button from '@mui/material/Button'
 import Card from '@mui/material/Card'
@@ -52,16 +49,15 @@ import {
   useAdminResumen,
   useCalificacionesAdmin,
   useCalificacionesDocente,
-  useCalificacionesEstudiante,
   useCalificacionesDocentePorCurso,
   useDistribucionNotas,
   useEstudiantesEnRiesgo,
   useOcupacionCursos,
   usePromediosCursos,
   useResumenDocente,
-  useResumenEstudiante,
 } from '../api/useDashboard'
 import type { CalificacionDashboard } from '../model/types'
+import { InicioEstudiante } from './InicioEstudiante'
 
 function nombreCompleto(estudiante?: CalificacionDashboard['inscripcion']['estudiante']) {
   return estudiante ? `${estudiante.nombres} ${estudiante.apellidos}` : 'Estudiante'
@@ -731,84 +727,9 @@ function DashboardDocente() {
   )
 }
 
-function DashboardEstudiante() {
-  const usuario = useUsuario()
-  const resumen = useResumenEstudiante(usuario.estudianteId)
-  const calificaciones = useCalificacionesEstudiante(usuario.estudianteId)
-
-  return (
-    <>
-      <PageHeader title="Mis datos" subtitle={resumen.data?.estudiante.nombre} />
-      <Grid component="div" container spacing={2} sx={{ mb: 3 }}>
-        <Grid component="div" size={{ xs: 12, sm: 4 }}>
-          <KpiCard label="Promedio general" value={resumen.data?.promedioGeneral == null ? '—' : <GradeBadge nota={resumen.data.promedioGeneral} />} loading={resumen.isPending} />
-        </Grid>
-        <Grid component="div" size={{ xs: 12, sm: 4 }}>
-          <KpiCard label="Materias cursadas" value={resumen.data?.materiasCursadas ?? '—'} loading={resumen.isPending} />
-        </Grid>
-        <Grid component="div" size={{ xs: 12, sm: 4 }}>
-          <KpiCard label="Calificaciones" value={resumen.data?.cantidadCalificaciones ?? '—'} loading={resumen.isPending} />
-        </Grid>
-      </Grid>
-      <Grid component="div" container spacing={2}>
-        <Grid component="div" size={{ xs: 12, md: 8 }}>
-          <SectionCard title="Promedio por período">
-            <QueryState query={resumen} isEmpty={(data) => data.porPeriodo.length === 0} emptyTitle="Sin promedios por período" skeletonHeight={260}>
-              {(data) => (
-                <Box role="group" aria-label={`Promedios por período: ${data.porPeriodo.map((item) => `${item.periodo} ${formatNota(item.promedio)}`).join('; ')}`}>
-                  <Box sx={{ display: { xs: 'none', sm: 'block' }, width: '100%', height: 280 }}>
-                    <ResponsiveContainer width="100%" height="100%">
-                      <LineChart data={data.porPeriodo} margin={{ top: 12, right: 12, left: 0, bottom: 8 }}>
-                        <CartesianGrid stroke={colors.divider} strokeDasharray="3 3" vertical={false} />
-                        <XAxis dataKey="periodo" tick={{ fill: colors.text.secondary, fontSize: 12 }} />
-                        <YAxis domain={[0, 100]} tick={{ fill: colors.text.secondary, fontSize: 12 }} />
-                        <Tooltip formatter={(value) => [formatNota(value == null ? null : Number(value)), 'Promedio']} />
-                        <Line
-                          type="monotone"
-                          dataKey="promedio"
-                          name="Promedio"
-                          stroke={chartColors[0]}
-                          strokeWidth={3}
-                          dot={{ r: 4, fill: chartColors[0] }}
-                          activeDot={{ r: 6 }}
-                          connectNulls={false}
-                        />
-                      </LineChart>
-                    </ResponsiveContainer>
-                  </Box>
-                  <ChartDataList
-                    items={data.porPeriodo.map((item) => ({
-                      label: item.periodo,
-                      value: formatNota(item.promedio),
-                      color: chartColors[0],
-                    }))}
-                  />
-                </Box>
-              )}
-            </QueryState>
-          </SectionCard>
-        </Grid>
-        <Grid component="div" size={{ xs: 12, md: 4 }}>
-          <SectionCard title="Accesos">
-            <Stack spacing={1}>
-              <Button component={RouterLink} to="/mi/historial" variant="outlined" startIcon={<SchoolOutlined />}>Historial académico</Button>
-              <Button component={RouterLink} to="/mi/calificaciones" variant="outlined">Mis calificaciones</Button>
-            </Stack>
-          </SectionCard>
-        </Grid>
-        <Grid component="div" size={12}>
-          <SectionCard title="Mis calificaciones">
-            <ListaCalificaciones query={calificaciones} />
-          </SectionCard>
-        </Grid>
-      </Grid>
-    </>
-  )
-}
-
 export function DashboardPage() {
   const usuario = useUsuario()
   if (usuario.rol === 'ADMIN') return <DashboardAdmin />
   if (usuario.rol === 'DOCENTE') return <DashboardDocente />
-  return <DashboardEstudiante />
+  return <InicioEstudiante />
 }

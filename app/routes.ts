@@ -25,6 +25,9 @@ export default [
     route('mi/calificaciones', 'routes/mi-calificaciones.tsx'),
     route('mi/historial', 'routes/mi-historial.tsx'),
     route('mi/inscripciones', 'routes/mi-inscripciones.tsx'),
+    route('mi/materias', 'routes/mi-materias.tsx'),
+    route('mi/materias/:materiaId', 'routes/mi-materia.tsx'),
+    route('mi/cuenta', 'routes/mi-cuenta.tsx'),
 
     route('*', 'routes/no-encontrado.tsx'),
   ]),

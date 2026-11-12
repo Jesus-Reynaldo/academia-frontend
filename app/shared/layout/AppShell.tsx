@@ -1,4 +1,7 @@
 import AppBar from '@mui/material/AppBar'
+import BottomNavigation from '@mui/material/BottomNavigation'
+import BottomNavigationAction from '@mui/material/BottomNavigationAction'
+import Paper from '@mui/material/Paper'
 import Avatar from '@mui/material/Avatar'
 import Box from '@mui/material/Box'
 import Divider from '@mui/material/Divider'
@@ -20,7 +23,7 @@ import Logout from '@mui/icons-material/Logout'
 import LockReset from '@mui/icons-material/LockReset'
 import SchoolRounded from '@mui/icons-material/SchoolRounded'
 import { Fragment, useState, type ReactNode } from 'react'
-import { NavLink, useNavigate } from 'react-router'
+import { NavLink, useLocation, useNavigate } from 'react-router'
 import { ETIQUETA_ROL, type Rol } from '../config/roles'
 import { iniciales } from '../lib/format'
 import { colors, SIDEBAR_WIDTH } from '../theme/tokens'
@@ -38,6 +41,11 @@ export function AppShell({ items, user, onLogout, children }: AppShellProps) {
   const isDesktop = useMediaQuery(theme.breakpoints.up('lg'))
   const navigate = useNavigate()
   const [mobileOpen, setMobileOpen] = useState(false)
+  const location = useLocation()
+  // Estudiante en celular o tablet: sus 4 destinos van en una barra inferior fija, sin menú lateral.
+  const barraInferior = user.rol === 'ESTUDIANTE' && !isDesktop
+  const destinoActual =
+    [...items].sort((a, b) => b.to.length - a.to.length).find((item) => (item.to === '/' ? location.pathname === '/' : location.pathname.startsWith(item.to)))?.to ?? false
   const [menuAnchor, setMenuAnchor] = useState<HTMLElement | null>(null)
 
   const closeMobile = () => setMobileOpen(false)
@@ -116,6 +124,7 @@ export function AppShell({ items, user, onLogout, children }: AppShellProps) {
         Saltar al contenido
       </Box>
 
+      {!barraInferior && (
       <Drawer
         variant={isDesktop ? 'permanent' : 'temporary'}
         open={isDesktop || mobileOpen}
@@ -130,6 +139,7 @@ export function AppShell({ items, user, onLogout, children }: AppShellProps) {
       >
         {nav}
       </Drawer>
+      )}
 
       <Box sx={{ flexGrow: 1, minWidth: 0, display: 'flex', flexDirection: 'column' }}>
         <AppBar
@@ -139,8 +149,8 @@ export function AppShell({ items, user, onLogout, children }: AppShellProps) {
           sx={{ borderBottom: 1, borderColor: 'divider', '@media print': { display: 'none' } }}
         >
           <Toolbar>
-            {!isDesktop && (
-              <IconButton edge="start" aria-label="Abrir menú" onClick={() => setMobileOpen(true)} sx={{ mr: 1 }}>
+            {!isDesktop && !barraInferior && (
+              <IconButton edge="start" aria-label="Abrir menú" onClick={() => setMobileOpen(true)} sx={{ mr: 1, width: 44, height: 44 }}>
                 <MenuIcon />
               </IconButton>
             )}
@@ -209,11 +219,42 @@ export function AppShell({ items, user, onLogout, children }: AppShellProps) {
             mx: 'auto',
             px: { xs: 2, sm: 3, lg: 4 },
             py: { xs: 2, sm: 3 },
+            // Espacio para que la barra inferior no tape el final del contenido.
+            pb: barraInferior ? 11 : undefined,
             outline: 'none',
           }}
         >
           {children}
         </Box>
+
+        {barraInferior && (
+          <Paper
+            component="nav"
+            aria-label="Navegación principal"
+            elevation={8}
+            sx={{ position: 'fixed', left: 0, right: 0, bottom: 0, zIndex: (t) => t.zIndex.appBar, '@media print': { display: 'none' } }}
+          >
+            <BottomNavigation showLabels value={destinoActual} sx={{ height: 64 }}>
+              {items.map((item) => (
+                <BottomNavigationAction
+                  key={item.to}
+                  component={NavLink}
+                  to={item.to}
+                  end={item.to === '/'}
+                  value={item.to}
+                  label={item.label}
+                  icon={item.icon}
+                  sx={{
+                    minWidth: 0,
+                    px: 0.5,
+                    // Mismo tamaño de texto seleccionado o no, para que no se parta en dos líneas.
+                    '& .MuiBottomNavigationAction-label, & .MuiBottomNavigationAction-label.Mui-selected': { fontSize: '0.75rem', whiteSpace: 'nowrap' },
+                  }}
+                />
+              ))}
+            </BottomNavigation>
+          </Paper>
+        )}
       </Box>
     </Box>
   )

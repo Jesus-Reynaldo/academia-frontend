@@ -26,6 +26,8 @@ interface CalificacionFiltrosProps {
   mostrarDocente: boolean
   cantidadActivos: number
   onLimpiar: () => void
+  /** Vista del estudiante: solo materia, tipo y período (sin curso ni rango de fechas). */
+  simplificado?: boolean
 }
 
 // Props comunes de los selectores: la etiqueta siempre arriba y la opción "Todos" visible.
@@ -38,6 +40,7 @@ export function CalificacionFiltros({
   mostrarDocente,
   cantidadActivos,
   onLimpiar,
+  simplificado = false,
 }: CalificacionFiltrosProps) {
   const theme = useTheme()
   const esMovil = useMediaQuery(theme.breakpoints.down('sm'))
@@ -70,7 +73,7 @@ export function CalificacionFiltros({
               display: 'grid',
               gap: 2,
               pt: esMovil ? 1.5 : 0,
-              gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, 1fr)', lg: 'repeat(4, 1fr)' },
+              gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, 1fr)', lg: simplificado ? 'repeat(3, 1fr)' : 'repeat(4, 1fr)' },
             }}
           >
             <TextField
@@ -101,6 +104,7 @@ export function CalificacionFiltros({
               ))}
             </TextField>
 
+            {!simplificado && (
             <TextField
               {...propsSelect}
               label="Curso"
@@ -114,6 +118,7 @@ export function CalificacionFiltros({
                 </MenuItem>
               ))}
             </TextField>
+            )}
 
             <TextField
               {...propsSelect}
@@ -152,6 +157,8 @@ export function CalificacionFiltros({
               </TextField>
             )}
 
+            {!simplificado && (
+            <>
             <TextField
               type="date"
               label="Desde"
@@ -166,6 +173,8 @@ export function CalificacionFiltros({
               onChange={(event) => onChange({ fechaHasta: event.target.value })}
               slotProps={{ inputLabel: { shrink: true } }}
             />
+            </>
+            )}
           </Box>
         </Collapse>
 

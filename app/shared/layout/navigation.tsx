@@ -9,6 +9,8 @@ import AssignmentIndOutlined from '@mui/icons-material/AssignmentIndOutlined'
 import GradeOutlined from '@mui/icons-material/GradeOutlined'
 import ManageAccountsOutlined from '@mui/icons-material/ManageAccountsOutlined'
 import HistoryEduOutlined from '@mui/icons-material/HistoryEduOutlined'
+import AccountCircleOutlined from '@mui/icons-material/AccountCircleOutlined'
+import HomeOutlined from '@mui/icons-material/HomeOutlined'
 import type { Rol } from '../config/roles'
 
 export interface NavItem {
@@ -45,10 +47,11 @@ export function navigationFor(rol: Rol): NavItem[] {
       ]
     case 'ESTUDIANTE':
       return [
-        inicio('Mis datos'),
-        { label: 'Mis calificaciones', to: '/mi/calificaciones', icon: <GradeOutlined /> },
-        { label: 'Historial académico', to: '/mi/historial', icon: <HistoryEduOutlined /> },
-        { label: 'Mis inscripciones', to: '/mi/inscripciones', icon: <AssignmentIndOutlined /> },
+        // Estos 4 destinos son también la barra inferior en celular (docs/PLAN-FASE-2.md, 2.4).
+        { label: 'Inicio', to: '/', icon: <HomeOutlined /> },
+        { label: 'Mis materias', to: '/mi/materias', icon: <MenuBookOutlined /> },
+        { label: 'Historial', to: '/mi/historial', icon: <HistoryEduOutlined /> },
+        { label: 'Mi cuenta', to: '/mi/cuenta', icon: <AccountCircleOutlined /> },
       ]
   }
 }

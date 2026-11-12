@@ -26,32 +26,13 @@ import { useHistorialAcademico } from '../api/useHistorialAcademico'
 import { NotaHistorial } from '../components/NotaHistorial'
 import { TablaCurso } from '../components/TablaCurso'
 import { TarjetasCurso } from '../components/TarjetasCurso'
+import { agruparPeriodos } from '../model/agrupar'
 import { resumenPeriodo } from '../model/desglose'
 import type { HistorialAcademico, HistorialCurso, HistorialPeriodo } from '../model/types'
 
 interface HistorialAcademicoPageProps {
   estudianteId: number | null
   showTitle?: boolean
-}
-
-function agruparPeriodos(historial: HistorialAcademico): HistorialPeriodo[] {
-  const grupos = new Map<number, HistorialPeriodo>()
-  for (const registro of historial.periodos) {
-    const periodo = grupos.get(registro.periodoId) ?? {
-      periodoId: registro.periodoId,
-      periodo: registro.periodo,
-      cursos: [],
-    }
-    const curso: HistorialCurso = {
-      cursoId: registro.cursoId,
-      curso: registro.curso,
-      promedio: registro.promedio,
-      materias: registro.materias,
-    }
-    periodo.cursos.push(curso)
-    grupos.set(registro.periodoId, periodo)
-  }
-  return [...grupos.values()]
 }
 
 /** Estilos de la libreta impresa: A4 vertical, todas las columnas visibles y sin hojas vacías. */
