@@ -193,7 +193,7 @@ Datos personales, curso actual, inscripciones como línea de tiempo y cambio de 
 
 | Tarea | Módulo | Estado | PR |
 |---|---|---|---|
-| DS-18 | Historial académico: libreta clara e impresión completa | En curso | — |
+| DS-18 | Historial académico: libreta clara e impresión completa | En revisión | #15 |
 | DS-19 | Panel de inicio: tablero «¿cómo voy?» | Por hacer | — |
 | DS-20 | Calificaciones: Mis materias y detalle por materia | Por hacer | — |
 | DS-21 | Navegación del estudiante: barra inferior y menú | Por hacer | — |
@@ -220,3 +220,4 @@ Se analizará con el mismo método (perfiles, auditoría, hallazgos, propuesta, 
 | Fecha | Tarea | PR | Cambio |
 |---|---|---|---|
 | 12/11/2026 | — | — | Creación del documento con el diagnóstico y la propuesta de la interfaz del estudiante. Tareas DS-18 a DS-22 creadas en Jira. |
+| 12/11/2026 | DS-18 | #15 | Historial: impresión A4 completa, gestión más reciente por defecto, solo columnas con datos, notas bajo 51 con icono y texto, resumen por gestión, tarjetas en celular y tabla accesible con teclado. Verificado: axe 0 violaciones en 14 vistas, 0 celdas «—», ninguna tabla impresa cortada. |
