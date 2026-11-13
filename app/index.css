@@ -1,3 +1,32 @@
+/*
+ * Tailwind convive con MUI: SIN preflight (el reinicio de estilos de Tailwind rompería los componentes de MUI).
+ * Solo se cargan el tema y las utilidades, dentro de capas CSS: los estilos de MUI ganan si hay conflicto.
+ * Los colores son los mismos de shared/theme/tokens.ts (bg-primary, text-ok, etc.).
+ */
+@layer theme, base, components, utilities;
+@import 'tailwindcss/theme.css' layer(theme);
+@import 'tailwindcss/utilities.css' layer(utilities);
+
+@theme {
+  --color-primary: #2740B8;
+  --color-primary-dark: #1E2F8A;
+  --color-primary-tint: #E8ECFD;
+  --color-sidebar: #111A3B;
+  --color-texto: #0F172A;
+  --color-texto-suave: #475569;
+  --color-borde: #E2E8F0;
+  --color-fondo: #F6F7FB;
+  --color-ok: #15803D;
+  --color-ok-tint: #DCFCE7;
+  --color-alerta: #B45309;
+  --color-alerta-tint: #FEF3C7;
+  --color-peligro: #B91C1C;
+  --color-peligro-tint: #FEE2E2;
+  --color-info: #0369A1;
+  --color-info-tint: #E0F2FE;
+  --font-sans: 'Inter', system-ui, sans-serif;
+}
+
 html {
   -webkit-text-size-adjust: 100%;
 }

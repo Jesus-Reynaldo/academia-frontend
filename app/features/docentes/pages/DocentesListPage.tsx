@@ -127,6 +127,7 @@ export function DocentesListPage() {
     <>
       <PageHeader
         title="Docentes"
+        modulo="docentes"
         subtitle={
           // role="status": el lector de pantalla anuncia el nuevo total al filtrar.
           <span role="status">

@@ -29,7 +29,7 @@ export function MiCuentaPage() {
 
   return (
     <>
-      <PageHeader title="Mi cuenta" subtitle={estudiante.data ? `${estudiante.data.nombres} ${estudiante.data.apellidos}` : undefined} />
+      <PageHeader title="Mi cuenta" modulo="cuenta" subtitle={estudiante.data ? `${estudiante.data.nombres} ${estudiante.data.apellidos}` : undefined} />
       <Stack spacing={2}>
         <SectionCard title="Mis datos">
           {estudiante.isPending ? (

@@ -4,6 +4,7 @@ import Skeleton from '@mui/material/Skeleton'
 import Typography from '@mui/material/Typography'
 import type { ReactNode } from 'react'
 import { Link as RouterLink } from 'react-router'
+import { ICONO_MODULO, type Modulo } from '../config/modulos'
 
 interface KpiCardProps {
   label: string
@@ -11,14 +12,24 @@ interface KpiCardProps {
   hint?: ReactNode
   loading?: boolean
   to?: string
+  /** Ícono del módulo (el mismo del menú). */
+  modulo?: Modulo
 }
 
-export function KpiCard({ label, value, hint, loading, to }: KpiCardProps) {
+export function KpiCard({ label, value, hint, loading, to, modulo }: KpiCardProps) {
+  const Icono = modulo ? ICONO_MODULO[modulo] : null
   const content = (
     <CardContent>
-      <Typography variant="body2" color="text.secondary">
-        {label}
-      </Typography>
+      <div className="flex items-start justify-between gap-2">
+        <Typography variant="body2" color="text.secondary">
+          {label}
+        </Typography>
+        {Icono && (
+          <span aria-hidden className="grid h-9 w-9 shrink-0 place-items-center rounded-lg bg-primary-tint text-primary">
+            <Icono fontSize="small" />
+          </span>
+        )}
+      </div>
       {loading ? (
         <Skeleton variant="text" width={80} sx={{ fontSize: '2rem' }} />
       ) : (

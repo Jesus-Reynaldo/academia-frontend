@@ -16,6 +16,7 @@ import {
   XAxis,
   YAxis,
 } from 'recharts'
+import { colorNota } from '../../../shared/lib/colorNota'
 import { formatNota } from '../../../shared/lib/format'
 import { colors } from '../../../shared/theme/tokens'
 import { GradeBadge } from '../../../shared/ui/GradeBadge'
@@ -26,14 +27,6 @@ interface PromedioGestion {
   periodoId: number
   periodo: string
   promedio: number | null
-}
-
-/** Color de la zona de una nota (los mismos cortes que GradeBadge). */
-function colorZona(nota: number) {
-  if (nota < APROBACION) return colors.error.main
-  if (nota <= 70) return colors.warning.main
-  if (nota <= 85) return colors.info.main
-  return colors.success.main
 }
 
 /** Nombre de la zona, en su esquina superior izquierda. */
@@ -156,7 +149,7 @@ export function EvolucionGestiones({ porPeriodo }: { porPeriodo: PromedioGestion
               strokeWidth={3}
               isAnimationActive={false}
               dot={({ cx, cy, payload, index }) => (
-                <circle key={index} cx={cx} cy={cy} r={7} fill={colorZona(payload.promedio)} stroke="#fff" strokeWidth={2} />
+                <circle key={index} cx={cx} cy={cy} r={7} fill={colorNota(payload.promedio)} stroke="#fff" strokeWidth={2} />
               )}
               activeDot={{ r: 8 }}
             >

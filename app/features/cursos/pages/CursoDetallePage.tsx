@@ -96,6 +96,7 @@ export function CursoDetallePage({ id }: { id: number }) {
           <Migas nombre={curso.nombre} />
           <PageHeader
             title={curso.nombre}
+            modulo="cursos"
             subtitle={
               <Stack direction="row" spacing={1} sx={{ alignItems: 'center', flexWrap: 'wrap' }}>
                 <span>{curso.paralelo ? `${curso.nivel} · Paralelo ${curso.paralelo}` : curso.nivel}</span>

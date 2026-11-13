@@ -126,6 +126,7 @@ export function EstudiantesListPage() {
     <>
       <PageHeader
         title="Estudiantes"
+        modulo="estudiantes"
         subtitle={
           // role="status": el lector de pantalla anuncia el nuevo total al filtrar.
           <span role="status">{total === undefined ? 'Cargando…' : `${total} ${total === 1 ? 'estudiante' : 'estudiantes'}`}</span>

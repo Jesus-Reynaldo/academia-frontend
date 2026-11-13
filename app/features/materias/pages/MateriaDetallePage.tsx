@@ -65,6 +65,7 @@ export function MateriaDetallePage({ materiaId }: { materiaId: number | null }) 
           <>
             <PageHeader
               title={materia.nombre}
+              modulo="materias"
               subtitle={
                 <Stack direction="row" spacing={1} sx={{ alignItems: 'center', flexWrap: 'wrap' }}>
                   <span>Código {materia.codigo}</span>

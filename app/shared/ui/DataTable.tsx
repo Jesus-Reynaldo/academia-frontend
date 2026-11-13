@@ -251,10 +251,8 @@ export function DataTable<T>({
                 )
               })}
               {rowActions && (
-                <TableCell align="right" scope="col" sx={{ fontWeight: 600 }}>
-                  <Box component="span" sx={visuallyHidden}>
-                    Acciones
-                  </Box>
+                <TableCell align="right" scope="col" sx={{ fontWeight: 600, pr: 3 }}>
+                  Acciones
                 </TableCell>
               )}
             </TableRow>

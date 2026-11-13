@@ -58,6 +58,7 @@ export function MisMateriasPage() {
     <>
       <PageHeader
         title="Mis materias"
+        modulo="materias"
         subtitle={periodo ? `${periodo.cursos.map((c) => c.curso).join(' · ')} · ${periodo.periodo}` : undefined}
         actions={
           <Button component={RouterLink} to="/mi/calificaciones" variant="outlined" sx={{ minHeight: 44 }}>

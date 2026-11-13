@@ -126,6 +126,7 @@ export function MateriasListPage() {
     <>
       <PageHeader
         title="Materias"
+        modulo="materias"
         subtitle={
           // role="status": el lector de pantalla anuncia el nuevo total al filtrar.
           <span role="status">

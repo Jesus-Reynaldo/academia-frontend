@@ -3,6 +3,7 @@ import {
   BarChart,
   CartesianGrid,
   Cell,
+  LabelList,
   ResponsiveContainer,
   Tooltip,
   XAxis,
@@ -43,7 +44,7 @@ import { KpiCard } from '../../../shared/ui/KpiCard'
 import { PageHeader } from '../../../shared/ui/PageHeader'
 import { QueryState } from '../../../shared/ui/QueryState'
 import { SectionCard } from '../../../shared/ui/SectionCard'
-import { chartColors, colors } from '../../../shared/theme/tokens'
+import { colors } from '../../../shared/theme/tokens'
 import { formatNota } from '../../../shared/lib/format'
 import {
   useAdminResumen,
@@ -58,6 +59,8 @@ import {
 } from '../api/useDashboard'
 import type { CalificacionDashboard } from '../model/types'
 import { InicioEstudiante } from './InicioEstudiante'
+import { GraficoPromedioCursos } from '../components/GraficoPromedioCursos'
+import { colorNota } from '../../../shared/lib/colorNota'
 import { ETIQUETA_TIPO, type TipoEvaluacion } from '../../calificaciones'
 
 function nombreCompleto(estudiante?: CalificacionDashboard['inscripcion']['estudiante']) {
@@ -262,6 +265,7 @@ function DashboardAdmin() {
     <>
       <PageHeader
         title="Inicio"
+        modulo="inicio"
         subtitle={
           periodoSeleccionado
             ? `Período seleccionado: ${periodoSeleccionado.nombre}`
@@ -294,14 +298,14 @@ function DashboardAdmin() {
 
       <Grid component="div" container spacing={2} sx={{ mb: 3 }}>
         {[
-          { label: 'Estudiantes activos', value: resumen.data?.totales.estudiantesActivos, to: '/estudiantes' },
-          { label: 'Docentes activos', value: resumen.data?.totales.docentesActivos, to: '/docentes' },
-          { label: 'Cursos activos', value: resumen.data?.totales.cursosActivos, to: '/cursos' },
-          { label: 'Materias activas', value: resumen.data?.totales.materiasActivas, to: '/materias' },
-          { label: 'Inscripciones activas', value: resumen.data?.inscripcionesActivas, to: '/inscripciones' },
-        ].map(({ label, value, to }) => (
+          { label: 'Estudiantes activos', value: resumen.data?.totales.estudiantesActivos, to: '/estudiantes', modulo: 'estudiantes' as const },
+          { label: 'Docentes activos', value: resumen.data?.totales.docentesActivos, to: '/docentes', modulo: 'docentes' as const },
+          { label: 'Cursos activos', value: resumen.data?.totales.cursosActivos, to: '/cursos', modulo: 'cursos' as const },
+          { label: 'Materias activas', value: resumen.data?.totales.materiasActivas, to: '/materias', modulo: 'materias' as const },
+          { label: 'Inscripciones activas', value: resumen.data?.inscripcionesActivas, to: '/inscripciones', modulo: 'inscripciones' as const },
+        ].map(({ label, value, to, modulo }) => (
           <Grid component="div" key={label} size={{ xs: 6, sm: 4, md: 2.4 }}>
-            <KpiCard label={label} value={value} loading={resumen.isPending} to={to} />
+            <KpiCard label={label} value={value} loading={resumen.isPending} to={to} modulo={modulo} />
           </Grid>
         ))}
       </Grid>
@@ -345,26 +349,12 @@ function DashboardAdmin() {
             <QueryState query={promedios} isEmpty={(data) => data.data.length === 0} emptyTitle="Sin promedios" skeletonHeight={240}>
               {(data) => (
                 <Box role="group" aria-label={`Promedios por curso: ${data.data.map((item) => `${item.curso} ${item.promedio}`).join('; ')}`}>
-                  <Box sx={{ display: { xs: 'none', sm: 'block' }, width: '100%', height: 250 }}>
-                    <ResponsiveContainer width="100%" height="100%">
-                      <BarChart data={data.data} margin={{ top: 12, right: 12, left: 0, bottom: 8 }}>
-                        <CartesianGrid stroke={colors.divider} strokeDasharray="3 3" vertical={false} />
-                        <XAxis dataKey="curso" tick={{ fill: colors.text.secondary, fontSize: 12 }} />
-                        <YAxis domain={[0, 100]} tick={{ fill: colors.text.secondary, fontSize: 12 }} />
-                        <Tooltip formatter={(value) => [formatNota(Number(value)), 'Promedio']} />
-                        <Bar dataKey="promedio" name="Promedio" radius={[4, 4, 0, 0]}>
-                          {data.data.map((item, index) => (
-                            <Cell key={item.cursoId} fill={chartColors[index % chartColors.length]} />
-                          ))}
-                        </Bar>
-                      </BarChart>
-                    </ResponsiveContainer>
-                  </Box>
+                  <GraficoPromedioCursos datos={data.data} />
                   <ChartDataList
-                    items={data.data.map((item, index) => ({
+                    items={data.data.map((item) => ({
                       label: item.curso,
                       value: formatNota(item.promedio),
-                      color: chartColors[index % chartColors.length],
+                      color: colorNota(item.promedio),
                     }))}
                   />
                 </Box>
@@ -395,7 +385,8 @@ function DashboardAdmin() {
                         <XAxis dataKey="rango" tick={{ fill: colors.text.secondary, fontSize: 12 }} />
                         <YAxis allowDecimals={false} tick={{ fill: colors.text.secondary, fontSize: 12 }} />
                         <Tooltip formatter={(value) => [Number(value), 'Calificaciones']} />
-                        <Bar dataKey="cantidad" name="Calificaciones" radius={[4, 4, 0, 0]}>
+                        <Bar dataKey="cantidad" name="Calificaciones" radius={[6, 6, 0, 0]} isAnimationActive={false}>
+                          <LabelList dataKey="cantidad" position="top" style={{ fill: colors.text.primary, fontSize: 12, fontWeight: 600 }} />
                           {data.data.map((item) => (
                             <Cell
                               key={item.rango}

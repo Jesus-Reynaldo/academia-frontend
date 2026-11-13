@@ -179,7 +179,7 @@ function HistorialContenido({ historial, showTitle }: { historial: HistorialAcad
       {showTitle ? (
         // En la hoja impresa el título lo da el encabezado «Libreta académica».
         <Box className="no-print">
-          <PageHeader title="Historial académico" actions={botonImprimir} />
+          <PageHeader title="Historial académico" modulo="historial" actions={botonImprimir} />
         </Box>
       ) : (
         <Box sx={{ display: 'flex', justifyContent: 'flex-end', mb: 1 }}>{botonImprimir}</Box>

@@ -107,6 +107,7 @@ export function UsuariosListPage() {
     <>
       <PageHeader
         title="Usuarios"
+        modulo="usuarios"
         subtitle={
           // role="status": el lector de pantalla anuncia el nuevo total al filtrar.
           <span role="status">{total === undefined ? 'Cargando…' : `${total} ${total === 1 ? 'usuario' : 'usuarios'}`}</span>

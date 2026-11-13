@@ -1,12 +1,9 @@
 import DeleteOutlined from '@mui/icons-material/DeleteOutlined'
-import MoreVert from '@mui/icons-material/MoreVert'
-import SwapHoriz from '@mui/icons-material/SwapHoriz'
-import IconButton from '@mui/material/IconButton'
-import ListItemIcon from '@mui/material/ListItemIcon'
-import ListItemText from '@mui/material/ListItemText'
-import Menu from '@mui/material/Menu'
-import MenuItem from '@mui/material/MenuItem'
-import { useId, useState } from 'react'
+import PersonRemoveOutlined from '@mui/icons-material/PersonRemoveOutlined'
+import ReplayOutlined from '@mui/icons-material/ReplayOutlined'
+import TaskAltOutlined from '@mui/icons-material/TaskAltOutlined'
+import type { ReactElement } from 'react'
+import { AccionesFila } from '../../../shared/ui/AccionesFila'
 import { ESTADOS_INSCRIPCION, ETIQUETA_ESTADO_INSCRIPCION, type EstadoInscripcion, type Inscripcion } from '../model/types'
 
 interface InscripcionRowMenuProps {
@@ -15,54 +12,28 @@ interface InscripcionRowMenuProps {
   onDelete: (inscripcion: Inscripcion) => void
 }
 
-/** Menú ⋮ de acciones por fila. Solo se renderiza para ADMIN (la API también lo exige). */
-export function InscripcionRowMenu({ inscripcion, onCambiarEstado, onDelete }: InscripcionRowMenuProps) {
-  const menuId = useId()
-  const [anchor, setAnchor] = useState<HTMLElement | null>(null)
-  const open = Boolean(anchor)
-  const close = () => setAnchor(null)
-  const { nombres, apellidos } = inscripcion.estudiante
+/** Ícono de cada cambio de estado: reactivar, retirar o finalizar. */
+const ICONO_ESTADO: Record<EstadoInscripcion, ReactElement> = {
+  ACTIVA: <ReplayOutlined />,
+  RETIRADA: <PersonRemoveOutlined />,
+  FINALIZADA: <TaskAltOutlined />,
+}
 
+/** Acciones como íconos: los dos estados a los que puede pasar y eliminar. Solo ADMIN (la API también lo exige). */
+export function InscripcionRowMenu({ inscripcion, onCambiarEstado, onDelete }: InscripcionRowMenuProps) {
+  const { nombres, apellidos } = inscripcion.estudiante
   return (
-    <>
-      <IconButton
-        aria-label={`Acciones de la inscripción de ${nombres} ${apellidos}`}
-        aria-haspopup="menu"
-        aria-controls={open ? menuId : undefined}
-        aria-expanded={open ? 'true' : undefined}
-        onClick={(event) => setAnchor(event.currentTarget)}
-        sx={{ width: 44, height: 44 }}
-      >
-        <MoreVert />
-      </IconButton>
-      <Menu id={menuId} anchorEl={anchor} open={open} onClose={close}>
-        {ESTADOS_INSCRIPCION.filter((estado) => estado !== inscripcion.estado).map((estado) => (
-          <MenuItem
-            key={estado}
-            onClick={() => {
-              close()
-              onCambiarEstado(inscripcion, estado)
-            }}
-          >
-            <ListItemIcon>
-              <SwapHoriz fontSize="small" />
-            </ListItemIcon>
-            <ListItemText>{`Marcar como ${ETIQUETA_ESTADO_INSCRIPCION[estado]}`}</ListItemText>
-          </MenuItem>
-        ))}
-        <MenuItem
-          onClick={() => {
-            close()
-            onDelete(inscripcion)
-          }}
-          sx={{ color: 'error.main' }}
-        >
-          <ListItemIcon sx={{ color: 'inherit' }}>
-            <DeleteOutlined fontSize="small" />
-          </ListItemIcon>
-          <ListItemText>Eliminar</ListItemText>
-        </MenuItem>
-      </Menu>
-    </>
+    <AccionesFila
+      sujeto={`la inscripción de ${nombres} ${apellidos}`}
+      acciones={[
+        ...ESTADOS_INSCRIPCION.filter((estado) => estado !== inscripcion.estado).map((estado) => ({
+          etiqueta: `Marcar como ${ETIQUETA_ESTADO_INSCRIPCION[estado]}`,
+          icono: ICONO_ESTADO[estado],
+          tono: estado === 'ACTIVA' ? ('exito' as const) : ('normal' as const),
+          onClick: () => onCambiarEstado(inscripcion, estado),
+        })),
+        { etiqueta: 'Eliminar', icono: <DeleteOutlined />, tono: 'peligro', onClick: () => onDelete(inscripcion) },
+      ]}
+    />
   )
 }
