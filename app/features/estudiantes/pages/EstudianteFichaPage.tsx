@@ -1,5 +1,4 @@
 import ArrowBack from '@mui/icons-material/ArrowBack'
-import DeleteOutlined from '@mui/icons-material/DeleteOutlined'
 import EditOutlined from '@mui/icons-material/EditOutlined'
 import Alert from '@mui/material/Alert'
 import Avatar from '@mui/material/Avatar'
@@ -30,6 +29,7 @@ import { EstudianteFormDialog } from '../components/EstudianteFormDialog'
 import { InscripcionesDelEstudiante } from '../components/InscripcionesDelEstudiante'
 import { HistorialAcademicoPage } from '../../historial-academico'
 import type { PaginaFichaParams } from '../model/types'
+import { BotonCambioEstado } from '../../../shared/ui/BotonCambioEstado'
 
 const LIMITES = [10, 20, 50]
 const PESTANAS = ['datos', 'inscripciones', 'calificaciones', 'historial'] as const
@@ -123,15 +123,15 @@ export function EstudianteFichaPage({ id }: { id: number }) {
                   <Button variant="outlined" startIcon={<EditOutlined />} onClick={() => setEditando(true)} sx={{ minHeight: 44 }}>
                     Editar
                   </Button>
-                  <Button
-                    variant="outlined"
-                    color="error"
-                    startIcon={<DeleteOutlined />}
-                    onClick={() => setEliminando(true)}
-                    sx={{ minHeight: 44 }}
-                  >
-                    Eliminar
-                  </Button>
+                  <BotonCambioEstado
+                    ruta="/estudiantes"
+                    id={estudiante.id}
+                    sujeto={`${estudiante.nombres} ${estudiante.apellidos}`}
+                    activo={estudiante.estado === 'ACTIVO' ? true : estudiante.estado === 'INACTIVO' ? false : null}
+                    alDesactivar={{ estado: 'INACTIVO' }}
+                    alActivar={{ estado: 'ACTIVO' }}
+                    efecto="No se podrá inscribir en cursos nuevos."
+                  />
                 </Stack>
               )}
             </Box>

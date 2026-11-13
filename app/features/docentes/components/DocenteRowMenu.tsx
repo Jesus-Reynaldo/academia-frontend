@@ -1,25 +1,37 @@
-import DeleteOutlined from '@mui/icons-material/DeleteOutlined'
 import EditOutlined from '@mui/icons-material/EditOutlined'
 import VisibilityOutlined from '@mui/icons-material/VisibilityOutlined'
-import { AccionesFila } from '../../../shared/ui/AccionesFila'
+import { AccionesFila, type AccionFila } from '../../../shared/ui/AccionesFila'
+import { useCambioEstado } from '../../../shared/ui/useCambioEstado'
 import type { Docente } from '../model/types'
 
 interface DocenteRowMenuProps {
   docente: Docente
   onEdit: (docente: Docente) => void
-  onDelete: (docente: Docente) => void
+  /** Ya no se usa: en lugar de eliminar se desactiva (los datos no se borran). */
+  onDelete?: (docente: Docente) => void
 }
 
-/** Acciones de la fila como íconos visibles. Solo se renderiza para ADMIN (la API también lo exige). */
-export function DocenteRowMenu({ docente, onEdit, onDelete }: DocenteRowMenuProps) {
+/** Acciones de la fila como íconos. Desactivar reemplaza a Eliminar: nunca se pierden datos. Solo ADMIN. */
+export function DocenteRowMenu({ docente, onEdit }: DocenteRowMenuProps) {
+  const sujeto = `${docente.nombres} ${docente.apellidos}`
+  const estado = useCambioEstado({
+    ruta: '/docentes',
+    id: docente.id,
+    sujeto,
+    activo: docente.estado === 'ACTIVO' ? true : docente.estado === 'INACTIVO' ? false : null,
+    alDesactivar: { estado: 'INACTIVO' },
+    alActivar: { estado: 'ACTIVO' },
+    efecto: 'Pasará al final de la lista y no podrá registrar calificaciones.',
+  })
+  const acciones: AccionFila[] = [
+    { etiqueta: 'Ver ficha', icono: <VisibilityOutlined />, to: `/docentes/${docente.id}` },
+    { etiqueta: 'Editar', icono: <EditOutlined />, onClick: () => onEdit(docente) },
+  ]
+  if (estado.accion) acciones.push(estado.accion)
   return (
-    <AccionesFila
-      sujeto={`${docente.nombres} ${docente.apellidos}`}
-      acciones={[
-        { etiqueta: 'Ver ficha', icono: <VisibilityOutlined />, to: `/docentes/${docente.id}` },
-        { etiqueta: 'Editar', icono: <EditOutlined />, onClick: () => onEdit(docente) },
-        { etiqueta: 'Eliminar', icono: <DeleteOutlined />, tono: 'peligro', onClick: () => onDelete(docente) },
-      ]}
-    />
+    <>
+      <AccionesFila sujeto={sujeto} acciones={acciones} />
+      {estado.dialogo}
+    </>
   )
 }

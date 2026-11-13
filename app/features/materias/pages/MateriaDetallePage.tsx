@@ -1,5 +1,4 @@
 import ArrowBack from '@mui/icons-material/ArrowBack'
-import DeleteOutlined from '@mui/icons-material/DeleteOutlined'
 import EditOutlined from '@mui/icons-material/EditOutlined'
 import Alert from '@mui/material/Alert'
 import Button from '@mui/material/Button'
@@ -19,6 +18,7 @@ import { useMateria } from '../api/useMaterias'
 import { CalificacionesDeMateria } from '../components/CalificacionesDeMateria'
 import { EliminarMateriaDialog } from '../components/EliminarMateriaDialog'
 import { MateriaFormDialog } from '../components/MateriaFormDialog'
+import { BotonCambioEstado } from '../../../shared/ui/BotonCambioEstado'
 
 const VOLVER = (
   <Button component={RouterLink} to="/materias" startIcon={<ArrowBack />} sx={{ mb: 1, minHeight: 44 }}>
@@ -83,15 +83,15 @@ export function MateriaDetallePage({ materiaId }: { materiaId: number | null }) 
                     >
                       Editar
                     </Button>
-                    <Button
-                      variant="outlined"
-                      color="error"
-                      startIcon={<DeleteOutlined />}
-                      onClick={() => setEliminando(true)}
-                      sx={{ minHeight: 44 }}
-                    >
-                      Eliminar
-                    </Button>
+                    <BotonCambioEstado
+                      ruta="/materias"
+                      id={materia.id}
+                      sujeto={materia.nombre}
+                      activo={materia.estado === 'ACTIVA'}
+                      alDesactivar={{ estado: 'INACTIVA' }}
+                      alActivar={{ estado: 'ACTIVA' }}
+                      efecto="No se podrá elegir para nuevas calificaciones."
+                    />
                   </>
                 )
               }

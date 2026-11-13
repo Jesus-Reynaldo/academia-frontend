@@ -1,4 +1,5 @@
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { activosPrimero } from '../../../shared/api/activosPrimero'
 import type { CursoInput, CursoListParams, EstadoCurso, PaginaDetalleParams } from '../model/types'
 import { cursosApi } from './cursos.api'
 
@@ -13,10 +14,17 @@ export const cursosKeys = {
 }
 
 /** Listado paginado. Mantiene la página anterior visible mientras llega la nueva (sin parpadeo). */
+/** Orden de los grupos cuando no se filtra por estado: los inactivos van al final. */
+const ORDEN_ESTADOS = ['ACTIVO', 'INACTIVO'] as const
+
 export function useCursosList(params: CursoListParams) {
   return useQuery({
     queryKey: cursosKeys.list(params),
-    queryFn: ({ signal }) => cursosApi.list(params, signal),
+    // Sin filtro de estado: los activos primero y los inactivos al final (cada grupo en el orden elegido).
+    queryFn: ({ signal }) =>
+      params.estado
+        ? cursosApi.list(params, signal)
+        : activosPrimero(ORDEN_ESTADOS, (estado, page, limit) => cursosApi.list({ ...params, estado, page, limit }, signal), params.page, params.limit),
     placeholderData: keepPreviousData,
   })
 }

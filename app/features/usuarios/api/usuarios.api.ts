@@ -7,10 +7,10 @@ const BASE = '/usuarios'
 const POR_PAGINA_API = 100
 
 /**
- * La API de usuarios solo filtra por rol. Para buscar por email se piden todas las páginas (con el mismo rol y
- * orden), se filtran aquí y se pagina el resultado con la misma forma que la API.
+ * La API de usuarios solo filtra por rol. Para buscar por email y dejar las cuentas desactivadas al final se piden
+ * todas las páginas (con el mismo rol y orden), se filtran y ordenan aquí y se pagina con la misma forma que la API.
  */
-async function buscarPorEmail(params: Omit<UsuarioListParams, 'q'>, texto: string, signal?: AbortSignal) {
+async function todasOrdenadas(params: Omit<UsuarioListParams, 'q'>, texto: string, signal?: AbortSignal) {
   const todas: CuentaUsuario[] = []
   for (let page = 1; ; page++) {
     const respuesta = await apiFetch<Paginated<CuentaUsuario>>(BASE, {
@@ -21,7 +21,10 @@ async function buscarPorEmail(params: Omit<UsuarioListParams, 'q'>, texto: strin
     if (page >= respuesta.meta.totalPages) break
   }
   const buscado = texto.toLowerCase()
-  const coinciden = todas.filter((cuenta) => cuenta.email.toLowerCase().includes(buscado))
+  // Activas primero y desactivadas al final; dentro de cada grupo se respeta el orden de la API.
+  const coinciden = todas
+    .filter((cuenta) => cuenta.email.toLowerCase().includes(buscado))
+    .sort((a, b) => Number(b.activo) - Number(a.activo))
   const inicio = (params.page - 1) * params.limit
   return {
     data: coinciden.slice(inicio, inicio + params.limit),
@@ -36,7 +39,7 @@ async function buscarPorEmail(params: Omit<UsuarioListParams, 'q'>, texto: strin
 
 export const usuariosApi = {
   list: ({ q, ...params }: UsuarioListParams, signal?: AbortSignal) =>
-    q ? buscarPorEmail(params, q, signal) : apiFetch<Paginated<CuentaUsuario>>(BASE, { query: params, signal }),
+    todasOrdenadas(params, q ?? '', signal),
 
   create: (input: CrearUsuarioInput) => apiFetch<CuentaUsuario>(BASE, { method: 'POST', body: input }),
 

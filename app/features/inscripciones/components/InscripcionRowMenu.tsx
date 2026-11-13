@@ -1,4 +1,3 @@
-import DeleteOutlined from '@mui/icons-material/DeleteOutlined'
 import PersonRemoveOutlined from '@mui/icons-material/PersonRemoveOutlined'
 import ReplayOutlined from '@mui/icons-material/ReplayOutlined'
 import TaskAltOutlined from '@mui/icons-material/TaskAltOutlined'
@@ -9,7 +8,8 @@ import { ESTADOS_INSCRIPCION, ETIQUETA_ESTADO_INSCRIPCION, type EstadoInscripcio
 interface InscripcionRowMenuProps {
   inscripcion: Inscripcion
   onCambiarEstado: (inscripcion: Inscripcion, estado: EstadoInscripcion) => void
-  onDelete: (inscripcion: Inscripcion) => void
+  /** Ya no se usa: una inscripción no se borra, se marca como Retirada o Finalizada. */
+  onDelete?: (inscripcion: Inscripcion) => void
 }
 
 /** Ícono de cada cambio de estado: reactivar, retirar o finalizar. */
@@ -19,8 +19,8 @@ const ICONO_ESTADO: Record<EstadoInscripcion, ReactElement> = {
   FINALIZADA: <TaskAltOutlined />,
 }
 
-/** Acciones como íconos: los dos estados a los que puede pasar y eliminar. Solo ADMIN (la API también lo exige). */
-export function InscripcionRowMenu({ inscripcion, onCambiarEstado, onDelete }: InscripcionRowMenuProps) {
+/** Acciones como íconos: los dos estados a los que puede pasar (no se borra). Solo ADMIN (la API también lo exige). */
+export function InscripcionRowMenu({ inscripcion, onCambiarEstado }: InscripcionRowMenuProps) {
   const { nombres, apellidos } = inscripcion.estudiante
   return (
     <AccionesFila
@@ -32,7 +32,6 @@ export function InscripcionRowMenu({ inscripcion, onCambiarEstado, onDelete }: I
           tono: estado === 'ACTIVA' ? ('exito' as const) : ('normal' as const),
           onClick: () => onCambiarEstado(inscripcion, estado),
         })),
-        { etiqueta: 'Eliminar', icono: <DeleteOutlined />, tono: 'peligro', onClick: () => onDelete(inscripcion) },
       ]}
     />
   )

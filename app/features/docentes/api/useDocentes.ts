@@ -1,4 +1,5 @@
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { activosPrimero } from '../../../shared/api/activosPrimero'
 import type { CalificacionesDocenteParams, DocenteInput, DocenteListParams } from '../model/types'
 import { docentesApi } from './docentes.api'
 
@@ -12,10 +13,17 @@ export const docentesKeys = {
 }
 
 /** Listado paginado. Mantiene la página anterior visible mientras llega la nueva (sin parpadeo). */
+/** Orden de los grupos cuando no se filtra por estado: los inactivos van al final. */
+const ORDEN_ESTADOS = ['ACTIVO', 'INACTIVO'] as const
+
 export function useDocentesList(params: DocenteListParams) {
   return useQuery({
     queryKey: docentesKeys.list(params),
-    queryFn: ({ signal }) => docentesApi.list(params, signal),
+    // Sin filtro de estado: los activos primero y los inactivos al final (cada grupo en el orden elegido).
+    queryFn: ({ signal }) =>
+      params.estado
+        ? docentesApi.list(params, signal)
+        : activosPrimero(ORDEN_ESTADOS, (estado, page, limit) => docentesApi.list({ ...params, estado, page, limit }, signal), params.page, params.limit),
     placeholderData: keepPreviousData,
   })
 }
