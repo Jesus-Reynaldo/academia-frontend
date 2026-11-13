@@ -9,10 +9,8 @@ import ListItemButton from '@mui/material/ListItemButton'
 import ListItemText from '@mui/material/ListItemText'
 import Skeleton from '@mui/material/Skeleton'
 import Typography from '@mui/material/Typography'
-import { CartesianGrid, Line, LineChart, ReferenceLine, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
 import { Link as RouterLink } from 'react-router'
-import { formatFecha, formatNota } from '../../../shared/lib/format'
-import { chartColors, colors } from '../../../shared/theme/tokens'
+import { formatFecha } from '../../../shared/lib/format'
 import { ErrorState } from '../../../shared/ui/ErrorState'
 import { GradeBadge } from '../../../shared/ui/GradeBadge'
 import { KpiCard } from '../../../shared/ui/KpiCard'
@@ -23,6 +21,7 @@ import { useEstudiante } from '../../estudiantes'
 import { resumenPeriodo, useAvanceEstudiante } from '../../historial-academico'
 import { useInscripcionesList } from '../../inscripciones'
 import { useCalificacionesEstudiante, useResumenEstudiante } from '../api/useDashboard'
+import { EvolucionGestiones } from '../components/EvolucionGestiones'
 
 const TIPO: Record<string, string> = {
   PARCIAL: 'Parcial',
@@ -189,27 +188,7 @@ export function InicioEstudiante() {
         {(resumenGeneral.data?.porPeriodo.length ?? 0) > 0 && (
           <Grid size={12}>
             <SectionCard title="Mi evolución por gestión">
-              {/* El gráfico es decorativo para lectores de pantalla: los mismos datos están en la lista de abajo. */}
-              <Box aria-hidden sx={{ display: { xs: 'none', sm: 'block' }, width: '100%', height: 240 }}>
-                <ResponsiveContainer width="100%" height="100%">
-                  <LineChart data={resumenGeneral.data?.porPeriodo} margin={{ top: 12, right: 24, left: 0, bottom: 8 }} accessibilityLayer={false}>
-                    <CartesianGrid stroke={colors.divider} strokeDasharray="3 3" vertical={false} />
-                    <XAxis dataKey="periodo" tick={{ fill: colors.text.secondary, fontSize: 12 }} />
-                    <YAxis domain={[0, 100]} tick={{ fill: colors.text.secondary, fontSize: 12 }} />
-                    <ReferenceLine y={51} stroke={colors.error.main} strokeDasharray="4 4" label={{ value: 'Aprobación (51)', fill: colors.error.main, fontSize: 12, position: 'insideBottomRight' }} />
-                    <Tooltip formatter={(v) => [formatNota(v == null ? null : Number(v)), 'Promedio']} />
-                    <Line type="monotone" dataKey="promedio" stroke={chartColors[0]} strokeWidth={3} dot={{ r: 5 }} />
-                  </LineChart>
-                </ResponsiveContainer>
-              </Box>
-              <Box component="ul" sx={{ listStyle: 'none', m: 0, p: 0, display: 'flex', flexWrap: 'wrap', gap: 2, mt: 1 }}>
-                {resumenGeneral.data?.porPeriodo.map((p) => (
-                  <Box component="li" key={p.periodoId} sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                    <Typography variant="body2">{p.periodo}:</Typography>
-                    <GradeBadge nota={p.promedio} />
-                  </Box>
-                ))}
-              </Box>
+              <EvolucionGestiones porPeriodo={resumenGeneral.data?.porPeriodo ?? []} />
             </SectionCard>
           </Grid>
         )}
