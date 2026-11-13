@@ -38,10 +38,13 @@ export const calificacionesApi = {
 // Viven aquí (y no en otros módulos) porque un feature no importa archivos internos de otro.
 // Si más adelante cursos/materias/docentes exportan sus selectores en su index.ts, se pueden reemplazar.
 export const referenciasApi = {
-  /** Inscripciones ACTIVAS para el autocompletar (la API no tiene búsqueda de texto: se filtra en el navegador). */
-  inscripciones: (signal?: AbortSignal) =>
+  /**
+   * Inscripciones ACTIVAS de un curso para el autocompletar. Se piden por curso para traerlas todas:
+   * sin curso, el límite de 100 dejaba fuera a estudiantes (la API no tiene búsqueda de texto).
+   */
+  inscripciones: (cursoId: number, signal?: AbortSignal) =>
     apiFetch<Paginated<InscripcionOpcion>>('/inscripciones', {
-      query: { page: 1, limit: 100, estado: 'ACTIVA', sortBy: 'id', order: 'desc' },
+      query: { page: 1, limit: 100, estado: 'ACTIVA', cursoId, sortBy: 'id', order: 'asc' },
       signal,
     }),
 

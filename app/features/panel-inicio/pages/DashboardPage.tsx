@@ -48,7 +48,7 @@ import { formatNota } from '../../../shared/lib/format'
 import {
   useAdminResumen,
   useCalificacionesAdmin,
-  useCalificacionesDocente,
+  useCursosDocente,
   useCalificacionesDocentePorCurso,
   useDistribucionNotas,
   useEstudiantesEnRiesgo,
@@ -58,6 +58,7 @@ import {
 } from '../api/useDashboard'
 import type { CalificacionDashboard } from '../model/types'
 import { InicioEstudiante } from './InicioEstudiante'
+import { ETIQUETA_TIPO, type TipoEvaluacion } from '../../calificaciones'
 
 function nombreCompleto(estudiante?: CalificacionDashboard['inscripcion']['estudiante']) {
   return estudiante ? `${estudiante.nombres} ${estudiante.apellidos}` : 'Estudiante'
@@ -468,32 +469,22 @@ function DashboardAdmin() {
 }
 
 function CursoDocenteCard({
-  docenteId,
   curso,
   seleccionado,
   onSelect,
 }: {
-  docenteId: number
-  curso: { id: number; nombre: string }
+  curso: { id: number; nombre: string; total: number }
   seleccionado: boolean
   onSelect: () => void
 }) {
-  const query = useCalificacionesDocentePorCurso(docenteId, curso.id, 1)
-
   return (
     <Card variant="outlined" sx={{ borderColor: seleccionado ? 'primary.main' : 'divider' }}>
       <CardActionArea onClick={onSelect} aria-pressed={seleccionado}>
         <CardContent>
           <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>{curso.nombre}</Typography>
-          {query.isPending ? (
-            <Typography variant="body2" color="text.secondary">Cargando calificaciones…</Typography>
-          ) : query.isError ? (
-            <ErrorState error={query.error} onRetry={() => void query.refetch()} />
-          ) : (
-            <Typography variant="body2" color="text.secondary">
-              {query.data.meta.total} calificaciones registradas
-            </Typography>
-          )}
+          <Typography variant="body2" color="text.secondary">
+            {curso.total} calificaciones registradas
+          </Typography>
         </CardContent>
       </CardActionArea>
     </Card>
@@ -503,18 +494,16 @@ function CursoDocenteCard({
 function DashboardDocente() {
   const usuario = useUsuario()
   const resumen = useResumenDocente(usuario.docenteId)
-  const cursosConCalificaciones = useCalificacionesDocente(usuario.docenteId)
+  // Todos los cursos activos con notas del docente (antes se deducían de sus últimas 100 notas y faltaban cursos).
+  const cursosConCalificaciones = useCursosDocente(usuario.docenteId)
   const [materiaId, setMateriaId] = useState<number | undefined>(undefined)
   const [cursoId, setCursoId] = useState<number | undefined>(undefined)
-  const materias = resumen.data?.materias ?? []
-  const cursos = useMemo(() => {
-    const cursosUnicos = new Map<number, string>()
-    for (const calificacion of cursosConCalificaciones.data?.data ?? []) {
-      const curso = calificacion.inscripcion.curso
-      if (curso) cursosUnicos.set(curso.id, curso.nombre)
-    }
-    return [...cursosUnicos].map(([id, nombre]) => ({ id, nombre }))
-  }, [cursosConCalificaciones.data?.data])
+  // La materia con más notas primero: es la que el gráfico muestra al abrir.
+  const materias = useMemo(
+    () => [...(resumen.data?.materias ?? [])].sort((a, b) => b.calificaciones - a.calificaciones),
+    [resumen.data?.materias],
+  )
+  const cursos = useMemo(() => cursosConCalificaciones.data ?? [], [cursosConCalificaciones.data])
   const cursoSeleccionadoId = cursos.some((curso) => curso.id === cursoId) ? cursoId : cursos[0]?.id
   const calificaciones = useCalificacionesDocentePorCurso(
     usuario.docenteId ?? 0,
@@ -532,11 +521,12 @@ function DashboardDocente() {
 
   return (
     <>
-      <PageHeader title="Inicio" subtitle={resumen.data?.docente.nombre} actions={<Button component={RouterLink} to="/calificaciones" variant="contained" startIcon={<AddOutlined />}>Registrar calificación</Button>} />
+      <PageHeader title="Inicio" subtitle={resumen.data?.docente.nombre} actions={<Button component={RouterLink} to="/mi/calificaciones?nueva=1" variant="contained" startIcon={<AddOutlined />}>Registrar calificación</Button>} />
+      <Box sx={{ mb: 2 }}>
       <SectionCard title="Cursos con calificaciones registradas">
         <QueryState
           query={cursosConCalificaciones}
-          isEmpty={(data) => data.data.length === 0}
+          isEmpty={(data) => data.length === 0}
           emptyTitle="Aún no hay cursos con calificaciones"
           emptyDescription="Los cursos aparecerán aquí cuando registres calificaciones."
         >
@@ -545,7 +535,6 @@ function DashboardDocente() {
               {cursos.map((curso) => (
                 <Grid component="div" key={curso.id} size={{ xs: 12, sm: 6, md: 4 }}>
                   <CursoDocenteCard
-                    docenteId={usuario.docenteId ?? 0}
                     curso={curso}
                     seleccionado={curso.id === cursoSeleccionadoId}
                     onSelect={() => setCursoId(curso.id)}
@@ -556,6 +545,7 @@ function DashboardDocente() {
           )}
         </QueryState>
       </SectionCard>
+      </Box>
       <Grid component="div" container spacing={2}>
         <Grid component="div" size={{ xs: 12, md: 7 }}>
           <SectionCard
@@ -624,7 +614,7 @@ function DashboardDocente() {
                               <Link
                                 component={RouterLink}
                                 to={`/estudiantes/${estudiante.id}`}
-                                underline="hover"
+                                underline="always"
                               >
                                 {nombreCompleto(estudiante)}
                               </Link>
@@ -632,7 +622,7 @@ function DashboardDocente() {
                               <Typography variant="body2">Estudiante</Typography>
                             )}
                             <Typography variant="body2" color="text.secondary">
-                              {nota.materia.nombre} · {nota.tipo}
+                              {nota.materia.nombre} · {ETIQUETA_TIPO[nota.tipo as TipoEvaluacion] ?? nota.tipo}
                             </Typography>
                           </Box>
                           <GradeBadge nota={nota.nota} />

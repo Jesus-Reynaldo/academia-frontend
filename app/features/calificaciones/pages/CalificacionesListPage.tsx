@@ -85,7 +85,15 @@ export function CalificacionesListPage({ modo }: CalificacionesListPageProps) {
   const periodos = usePeriodosReferencia()
 
   // `formulario`: null = cerrado; { calificacion: null } = alta; { calificacion } = edición.
-  const [formulario, setFormulario] = useState<{ calificacion: Calificacion | null } | null>(null)
+  // ?nueva=1 (botón «Registrar calificación» del Inicio): el formulario de alta empieza abierto.
+  const pideNueva = searchParams.get('nueva') === '1'
+  const [formulario, setFormulario] = useState<{ calificacion: Calificacion | null } | null>(() =>
+    pideNueva && puedeEscribir ? { calificacion: null } : null,
+  )
+  // Se quita el parámetro para que recargar o volver no reabra el formulario.
+  useEffect(() => {
+    if (pideNueva) updateParams({ nueva: null })
+  }, [pideNueva, updateParams])
 
   // PASO 2: filtros activos (cuántos y cómo limpiarlos).
   const filtrosActivos = [

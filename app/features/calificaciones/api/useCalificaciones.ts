@@ -38,12 +38,13 @@ export function useActualizarCalificacion() {
 
 // ---- Listas de apoyo (datos de referencia: se cachean y se comparten entre filtros y formulario) ----
 
-export function useInscripcionesReferencia(habilitado = true) {
+/** Inscripciones activas del curso elegido; sin curso no se consulta. */
+export function useInscripcionesReferencia(cursoId: number | null, habilitado = true) {
   return useQuery({
-    queryKey: ['referencias', 'inscripciones-activas'],
-    queryFn: ({ signal }) => referenciasApi.inscripciones(signal),
+    queryKey: ['referencias', 'inscripciones-activas', cursoId],
+    queryFn: ({ signal }) => referenciasApi.inscripciones(cursoId as number, signal),
     staleTime: 60 * 1000,
-    enabled: habilitado,
+    enabled: habilitado && cursoId !== null,
   })
 }
 
