@@ -21,6 +21,7 @@ import { SectionCard } from '../../../shared/ui/SectionCard'
 import { useUsuario } from '../../autenticacion'
 import { useEstudiante } from '../../estudiantes'
 import { resumenPeriodo, useAvanceEstudiante } from '../../historial-academico'
+import { useInscripcionesList } from '../../inscripciones'
 import { useCalificacionesEstudiante, useResumenEstudiante } from '../api/useDashboard'
 
 const TIPO: Record<string, string> = {
@@ -41,6 +42,10 @@ export function InicioEstudiante() {
   const avance = useAvanceEstudiante(id)
   const resumenGeneral = useResumenEstudiante(id)
   const ultimas = useCalificacionesEstudiante(id)
+  // El historial no trae el estado de la inscripción: la API devuelve solo las del propio estudiante.
+  const inscripciones = useInscripcionesList({ page: 1, limit: 50, sortBy: 'fechaInscripcion', order: 'desc' })
+  const inscripcionEnCurso = inscripciones.data?.data.find((i) => i.periodoAcademicoId === avance.periodoActivoId)
+  const cerradaEnCurso = avance.actualEnCurso && inscripcionEnCurso && inscripcionEnCurso.estado !== 'ACTIVA' ? inscripcionEnCurso : undefined
 
   const nombre = estudiante.data?.nombres.split(' ')[0] ?? usuario.nombre?.split(' ')[0] ?? ''
   const periodo = avance.actual
@@ -56,6 +61,10 @@ export function InicioEstudiante() {
     situacion = { severidad: 'warning', texto: 'Tu inscripción figura como retirada. Puedes consultar tu historial; para volver a inscribirte, acude a secretaría.', accion: { texto: 'Ver mi historial', a: '/mi/historial' } }
   } else if (estado === 'INACTIVO') {
     situacion = { severidad: 'warning', texto: 'Tu registro está inactivo. Si crees que es un error, acude a secretaría.' }
+  } else if (cerradaEnCurso?.estado === 'RETIRADA') {
+    situacion = { severidad: 'warning', texto: `Tu inscripción en ${cerradaEnCurso.curso.nombre} (${cerradaEnCurso.periodoAcademico.nombre}) figura como retirada. Tus notas siguen en tu historial; para volver a inscribirte, acude a secretaría.`, accion: { texto: 'Ver mi historial', a: '/mi/historial' } }
+  } else if (cerradaEnCurso?.estado === 'FINALIZADA') {
+    situacion = { severidad: 'info', texto: `Tu inscripción en ${cerradaEnCurso.curso.nombre} (${cerradaEnCurso.periodoAcademico.nombre}) ya está finalizada. Tu libreta sigue disponible.`, accion: { texto: 'Ver mi libreta', a: '/mi/historial' } }
   } else if (!avance.isPending && !periodo) {
     situacion = { severidad: 'info', texto: 'Todavía no estás inscrito en un curso. Cuando te inscriban, aquí verás cómo vas.' }
   } else if (!avance.isPending && periodo && !avance.actualEnCurso) {
@@ -71,7 +80,7 @@ export function InicioEstudiante() {
   if (avance.isError) return <ErrorState error={avance.error} onRetry={avance.refetch} />
 
   const subtitulo = periodo
-    ? `${periodo.cursos.map((c) => c.curso).join(' · ')} · ${periodo.periodo}${avance.actualEnCurso ? ' (en curso)' : ''}`
+    ? `${periodo.cursos.map((c) => c.curso).join(' · ')} · ${periodo.periodo}${avance.actualEnCurso && !cerradaEnCurso ? ' (en curso)' : ''}`
     : undefined
 
   return (
