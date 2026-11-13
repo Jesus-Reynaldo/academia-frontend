@@ -27,7 +27,7 @@ export function navigationFor(rol: Rol): NavItem[] {
   switch (rol) {
     case 'ADMIN':
       return [
-        inicio('Panel'),
+        inicio('Inicio'),
         { label: 'Estudiantes', to: '/estudiantes', icon: <SchoolOutlined />, group: 'Personas' },
         { label: 'Docentes', to: '/docentes', icon: <BadgeOutlined />, group: 'Personas' },
         { label: 'Usuarios', to: '/usuarios', icon: <ManageAccountsOutlined />, group: 'Personas' },

@@ -64,6 +64,8 @@ export function AppShell({ items, user, onLogout, children }: AppShellProps) {
           <Fragment key={item.to}>
             {item.group && item.group !== items[index - 1]?.group && (
               <ListSubheader
+                // Dentro de <nav> no hay <ul>: un <li> suelto viola la estructura de listas (axe listitem).
+                component="div"
                 disableSticky
                 sx={{
                   bgcolor: 'transparent',

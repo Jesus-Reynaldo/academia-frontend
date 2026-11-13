@@ -261,7 +261,7 @@ function DashboardAdmin() {
   return (
     <>
       <PageHeader
-        title="Resumen"
+        title="Inicio"
         subtitle={
           periodoSeleccionado
             ? `Período seleccionado: ${periodoSeleccionado.nombre}`
@@ -308,7 +308,7 @@ function DashboardAdmin() {
 
       {!resumen.isPending && !periodoActivo && (
         <Box sx={{ mb: 2 }}>
-          <KpiCard label="Período vigente" value="Sin período activo" hint={<Link component={RouterLink} to="/periodos-academicos">Gestionar períodos</Link>} />
+          <KpiCard label="Período vigente" value="Sin período activo" hint={<Link component={RouterLink} to="/periodos-academicos" underline="always">Gestionar períodos</Link>} />
         </Box>
       )}
       {resumen.isError && <Box sx={{ mb: 2 }}><ErrorState error={resumen.error} onRetry={() => void resumen.refetch()} /></Box>}
@@ -323,14 +323,14 @@ function DashboardAdmin() {
                     const porcentaje = curso.porcentaje ?? 0
                     const color = porcentaje >= 100 ? colors.error.main : porcentaje >= 90 ? colors.warning.main : colors.primary.main
                     return (
-                      <Box key={curso.cursoId} aria-label={`${curso.nombre}: ${curso.inscritosActivos} inscritos${curso.capacidad == null ? '' : ` de ${curso.capacidad}, ${porcentaje} por ciento`}`}>
+                      <Box key={curso.cursoId}>
                         <Stack component="div" direction="row" sx={{ justifyContent: 'space-between' }}>
                           <Typography variant="body2">{curso.nombre}</Typography>
                           <Typography variant="body2">
                             {curso.capacidad == null ? `${curso.inscritosActivos} inscritos` : `${curso.inscritosActivos}/${curso.capacidad} · ${porcentaje} %`}
                           </Typography>
                         </Stack>
-                        {curso.capacidad != null && <LinearProgress variant="determinate" value={Math.min(porcentaje, 100)} sx={{ mt: 1, '& .MuiLinearProgress-bar': { bgcolor: color } }} />}
+                        {curso.capacidad != null && <LinearProgress variant="determinate" value={Math.min(porcentaje, 100)} aria-label={`Ocupación de ${curso.nombre}`} sx={{ mt: 1, '& .MuiLinearProgress-bar': { bgcolor: color } }} />}
                       </Box>
                     )
                   })}
@@ -444,11 +444,19 @@ function DashboardAdmin() {
                 <>
                   <Stack spacing={1}>
                     {data.data.map((estudiante) => (
-                      <Box key={estudiante.estudianteId}>
-                        <Link component={RouterLink} to={`/estudiantes/${estudiante.estudianteId}`}>{estudiante.nombre}</Link>
-                        {' · '}{estudiante.codigo}
-                        <Typography variant="body2" color="text.secondary">{estudiante.promedio} · {estudiante.cantidadCalificaciones} notas</Typography>
-                      </Box>
+                      <Stack
+                        key={estudiante.estudianteId}
+                        direction="row"
+                        sx={{ alignItems: 'center', justifyContent: 'space-between', gap: 1, p: 1, border: 1, borderColor: 'divider', borderRadius: 2 }}
+                      >
+                        <Box sx={{ minWidth: 0 }}>
+                          <Link component={RouterLink} to={`/estudiantes/${estudiante.estudianteId}`} underline="always">{estudiante.nombre}</Link>
+                          <Typography variant="body2" color="text.secondary">
+                            {estudiante.codigo} · {estudiante.cantidadCalificaciones} notas
+                          </Typography>
+                        </Box>
+                        <GradeBadge nota={estudiante.promedio} />
+                      </Stack>
                     ))}
                   </Stack>
                   {data.meta.totalPages > 1 && (
