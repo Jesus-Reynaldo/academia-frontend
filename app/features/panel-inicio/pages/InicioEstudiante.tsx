@@ -1,4 +1,5 @@
 import ChevronRight from '@mui/icons-material/ChevronRight'
+import WarningAmberOutlined from '@mui/icons-material/WarningAmberOutlined'
 import Alert from '@mui/material/Alert'
 import Box from '@mui/material/Box'
 import Button from '@mui/material/Button'
@@ -84,7 +85,7 @@ export function InicioEstudiante() {
 
   return (
     <>
-      <PageHeader title={nombre ? `Hola, ${nombre}` : 'Inicio'} subtitle={avance.isPending ? 'Cargando…' : subtitulo} />
+      <PageHeader modulo="inicio" title={nombre ? `Hola, ${nombre}` : 'Inicio'} subtitle={avance.isPending ? 'Cargando…' : subtitulo} />
 
       {avance.isPending ? (
         <Skeleton variant="rounded" height={64} sx={{ mb: 2 }} />
@@ -109,13 +110,13 @@ export function InicioEstudiante() {
       {resumen && resumen.materias > 0 && (
         <Grid container spacing={2} sx={{ mb: 2 }}>
           <Grid size={{ xs: 12, sm: 4 }}>
-            <KpiCard label={`Promedio ${periodo?.periodo ?? ''}`} value={<GradeBadge nota={promedioGestion} />} />
+            <KpiCard modulo="calificaciones" label={`Promedio ${periodo?.periodo ?? ''}`} value={<GradeBadge nota={promedioGestion} />} />
           </Grid>
           <Grid size={{ xs: 6, sm: 4 }}>
-            <KpiCard label="Materias aprobando" value={`${resumen.aprobadas} / ${resumen.materias}`} to="/mi/materias" />
+            <KpiCard modulo="materias" label="Materias aprobando" value={`${resumen.aprobadas} / ${resumen.materias}`} to="/mi/materias" />
           </Grid>
           <Grid size={{ xs: 6, sm: 4 }}>
-            <KpiCard label="Por debajo de 51" value={resumen.debajo.length} to="/mi/materias" />
+            <KpiCard icono={WarningAmberOutlined} tono={resumen.debajo.length > 0 ? 'peligro' : 'normal'} label="Por debajo de 51" value={resumen.debajo.length} to="/mi/materias" />
           </Grid>
         </Grid>
       )}

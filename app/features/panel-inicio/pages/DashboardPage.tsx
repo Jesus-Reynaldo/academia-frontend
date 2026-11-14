@@ -10,6 +10,8 @@ import {
   YAxis,
 } from 'recharts'
 import AddOutlined from '@mui/icons-material/AddOutlined'
+import ClassOutlined from '@mui/icons-material/ClassOutlined'
+import InsightsOutlined from '@mui/icons-material/InsightsOutlined'
 import Box from '@mui/material/Box'
 import Button from '@mui/material/Button'
 import Card from '@mui/material/Card'
@@ -480,7 +482,12 @@ function CursoDocenteCard({
     <Card variant="outlined" sx={{ borderColor: seleccionado ? 'primary.main' : 'divider' }}>
       <CardActionArea onClick={onSelect} aria-pressed={seleccionado}>
         <CardContent>
-          <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>{curso.nombre}</Typography>
+          <div className="flex items-center gap-2">
+            <span aria-hidden className="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-primary-tint text-primary">
+              <ClassOutlined fontSize="small" />
+            </span>
+            <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>{curso.nombre}</Typography>
+          </div>
           <Typography variant="body2" color="text.secondary">
             {curso.total} calificaciones registradas
           </Typography>
@@ -520,7 +527,26 @@ function DashboardDocente() {
 
   return (
     <>
-      <PageHeader title="Inicio" subtitle={resumen.data?.docente.nombre} actions={<Button component={RouterLink} to="/mi/calificaciones?nueva=1" variant="contained" startIcon={<AddOutlined />}>Registrar calificación</Button>} />
+      <PageHeader modulo="inicio" title="Inicio" subtitle={resumen.data?.docente.nombre} actions={<Button component={RouterLink} to="/mi/calificaciones?nueva=1" variant="contained" startIcon={<AddOutlined />}>Registrar calificación</Button>} />
+      <Grid component="div" container spacing={2} sx={{ mb: 2 }}>
+        {[
+          { label: 'Calificaciones registradas', value: resumen.data?.calificacionesRegistradas, modulo: 'calificaciones' as const, to: '/mi/calificaciones' },
+          { label: 'Cursos con notas', value: cursosConCalificaciones.data?.length, modulo: 'cursos' as const, to: '/cursos' },
+          { label: 'Materias que evalúa', value: resumen.data?.materias.length, modulo: 'materias' as const, to: '/materias' },
+        ].map(({ label, value, modulo, to }) => (
+          <Grid component="div" key={label} size={{ xs: 6, md: 3 }}>
+            <KpiCard label={label} value={value} modulo={modulo} to={to} loading={resumen.isPending || cursosConCalificaciones.isPending} />
+          </Grid>
+        ))}
+        <Grid component="div" size={{ xs: 6, md: 3 }}>
+          <KpiCard
+            label="Promedio que otorga"
+            icono={InsightsOutlined}
+            loading={resumen.isPending}
+            value={<GradeBadge nota={resumen.data?.promedioOtorgado ?? null} />}
+          />
+        </Grid>
+      </Grid>
       <Box sx={{ mb: 2 }}>
       <SectionCard title="Cursos con calificaciones registradas">
         <QueryState
@@ -669,7 +695,8 @@ function DashboardDocente() {
                             <XAxis dataKey="rango" tick={{ fill: colors.text.secondary, fontSize: 12 }} />
                             <YAxis allowDecimals={false} tick={{ fill: colors.text.secondary, fontSize: 12 }} />
                             <Tooltip formatter={(value) => [Number(value), 'Calificaciones']} />
-                            <Bar dataKey="cantidad" name="Calificaciones" radius={[4, 4, 0, 0]}>
+                            <Bar dataKey="cantidad" name="Calificaciones" radius={[6, 6, 0, 0]} isAnimationActive={false}>
+                              <LabelList dataKey="cantidad" position="top" style={{ fill: colors.text.primary, fontSize: 12, fontWeight: 600 }} />
                               {data.data.map((item) => (
                                 <Cell
                                   key={item.rango}
