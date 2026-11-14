@@ -1,9 +1,11 @@
 import Add from '@mui/icons-material/Add'
+import ArrowBack from '@mui/icons-material/ArrowBack'
 import EditOutlined from '@mui/icons-material/EditOutlined'
 import Alert from '@mui/material/Alert'
 import Button from '@mui/material/Button'
 import IconButton from '@mui/material/IconButton'
 import Typography from '@mui/material/Typography'
+import { Link as RouterLink } from 'react-router'
 import { useEffect, useMemo, useState } from 'react'
 import type { Paginated } from '../../../shared/api/pagination'
 import { useUrlParams } from '../../../shared/hooks/useUrlParams'
@@ -83,7 +85,15 @@ export function CalificacionesListPage({ modo }: CalificacionesListPageProps) {
   const periodos = usePeriodosReferencia()
 
   // `formulario`: null = cerrado; { calificacion: null } = alta; { calificacion } = edición.
-  const [formulario, setFormulario] = useState<{ calificacion: Calificacion | null } | null>(null)
+  // ?nueva=1 (botón «Registrar calificación» del Inicio): el formulario de alta empieza abierto.
+  const pideNueva = searchParams.get('nueva') === '1'
+  const [formulario, setFormulario] = useState<{ calificacion: Calificacion | null } | null>(() =>
+    pideNueva && puedeEscribir ? { calificacion: null } : null,
+  )
+  // Se quita el parámetro para que recargar o volver no reabra el formulario.
+  useEffect(() => {
+    if (pideNueva) updateParams({ nueva: null })
+  }, [pideNueva, updateParams])
 
   // PASO 2: filtros activos (cuántos y cómo limpiarlos).
   const filtrosActivos = [
@@ -109,12 +119,13 @@ export function CalificacionesListPage({ modo }: CalificacionesListPageProps) {
     })
 
   const total = query.data?.meta.total
-  const titulo = modo === 'gestion' ? 'Calificaciones' : 'Mis calificaciones'
+  const esEstudiante = usuario.rol === 'ESTUDIANTE'
+  const titulo = modo === 'gestion' ? 'Calificaciones' : esEstudiante ? 'Todas mis notas' : 'Mis calificaciones'
 
   // PASO 3: columnas de la tabla. El período no viene en la calificación: se busca por id en la lista de períodos.
   const nombrePeriodo = (id: number) => periodos.data?.find((periodo) => periodo.id === id)?.nombre
 
-  const columnas: DataTableColumn<Calificacion>[] = [
+  const todasLasColumnas: DataTableColumn<Calificacion>[] = [
     {
       id: 'estudiante',
       header: 'Estudiante',
@@ -135,6 +146,10 @@ export function CalificacionesListPage({ modo }: CalificacionesListPageProps) {
     { id: 'fecha', header: 'Fecha', sortField: 'fecha', render: (c) => formatFecha(c.fecha) },
     { id: 'docente', header: 'Docente', render: (c) => nombreDocente(c.docente) },
   ]
+  // El estudiante no necesita una columna con su propio nombre: la materia pasa a ser el título de cada fila.
+  const columnas = esEstudiante
+    ? todasLasColumnas.filter((c) => c.id !== 'estudiante').map((c) => (c.id === 'materia' ? { ...c, primary: true } : c))
+    : todasLasColumnas
 
   // PASO 4: estado vacío distinto con y sin filtros.
   const vacio =
@@ -164,8 +179,14 @@ export function CalificacionesListPage({ modo }: CalificacionesListPageProps) {
 
   return (
     <>
+      {esEstudiante && (
+        <Button component={RouterLink} to="/mi/materias" startIcon={<ArrowBack />} sx={{ mb: 1, minHeight: 44 }}>
+          Mis materias
+        </Button>
+      )}
       <PageHeader
         title={titulo}
+        modulo="calificaciones"
         subtitle={
           // role="status": el lector de pantalla anuncia el nuevo total al filtrar.
           <span role="status">
@@ -191,6 +212,7 @@ export function CalificacionesListPage({ modo }: CalificacionesListPageProps) {
         onChange={updateParams}
         mostrarEstudiante={puedeEscribir}
         mostrarDocente={esAdmin}
+        simplificado={esEstudiante}
         cantidadActivos={filtrosActivos}
         onLimpiar={limpiarFiltros}
       />

@@ -134,6 +134,7 @@ export function CursosListPage() {
     <>
       <PageHeader
         title="Cursos"
+        modulo="cursos"
         subtitle={
           // role="status": el lector de pantalla anuncia el nuevo total al filtrar.
           <span role="status">{total === undefined ? 'Cargando…' : `${total} ${total === 1 ? 'curso' : 'cursos'}`}</span>

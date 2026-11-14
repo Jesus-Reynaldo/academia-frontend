@@ -1,11 +1,6 @@
-import { RequireRole } from '../features/autenticacion'
-import { InscripcionesListPage } from '../features/inscripciones'
+import { Navigate } from 'react-router'
 
-// Inscripciones propias, solo lectura: la API limita el listado a las del estudiante que consulta.
+// Las inscripciones del estudiante ahora están dentro de «Mi cuenta».
 export default function MisInscripciones() {
-  return (
-    <RequireRole roles={['ESTUDIANTE']}>
-      <InscripcionesListPage modo="mias" />
-    </RequireRole>
-  )
+  return <Navigate to="/mi/cuenta#inscripciones" replace />
 }

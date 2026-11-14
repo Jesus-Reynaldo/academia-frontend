@@ -108,6 +108,8 @@ export function DataTable<T>({
       onPageChange={(_, zeroBased) => pagination.onPageChange(zeroBased + 1)}
       onRowsPerPageChange={(event) => pagination.onLimitChange(Number(event.target.value))}
       labelRowsPerPage="Filas:"
+      // Objetivos táctiles de al menos 44 px (WCAG 2.5.8).
+      sx={{ '& .MuiTablePagination-actions .MuiIconButton-root': { width: 44, height: 44 }, '& .MuiTablePagination-select': { minHeight: 32, display: 'flex', alignItems: 'center' } }}
       labelDisplayedRows={({ from, to, count }) => `${from}–${to} de ${count}`}
       getItemAriaLabel={(type) =>
         ({
@@ -217,7 +219,7 @@ export function DataTable<T>({
           <Box component="caption" sx={visuallyHidden}>
             {caption}
           </Box>
-          <TableHead>
+          <TableHead className="bg-fondo">
             <TableRow>
               {columns.map((column) => {
                 const active = sort !== undefined && column.sortField !== undefined && sort.sortBy === column.sortField
@@ -249,10 +251,8 @@ export function DataTable<T>({
                 )
               })}
               {rowActions && (
-                <TableCell align="right" scope="col" sx={{ fontWeight: 600 }}>
-                  <Box component="span" sx={visuallyHidden}>
-                    Acciones
-                  </Box>
+                <TableCell align="right" scope="col" sx={{ fontWeight: 600, pr: 3 }}>
+                  Acciones
                 </TableCell>
               )}
             </TableRow>

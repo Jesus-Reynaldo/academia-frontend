@@ -38,4 +38,6 @@ export interface UsuarioListParams {
   sortBy: CampoOrdenable
   order: 'asc' | 'desc'
   rol?: Rol
+  /** Texto a buscar en el email. La API no lo admite: se filtra en el navegador (ver usuariosApi.list). */
+  q?: string
 }

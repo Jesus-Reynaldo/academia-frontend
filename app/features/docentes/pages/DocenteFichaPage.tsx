@@ -1,5 +1,4 @@
 import ArrowBack from '@mui/icons-material/ArrowBack'
-import DeleteOutlined from '@mui/icons-material/DeleteOutlined'
 import EditOutlined from '@mui/icons-material/EditOutlined'
 import Avatar from '@mui/material/Avatar'
 import Box from '@mui/material/Box'
@@ -27,6 +26,7 @@ import { StatusChip } from '../../../shared/ui/StatusChip'
 import { useDocente, useDocenteCalificaciones } from '../api/useDocentes'
 import { DocenteFormDialog } from '../components/DocenteFormDialog'
 import { EliminarDocenteDialog } from '../components/EliminarDocenteDialog'
+import { BotonCambioEstado } from '../../../shared/ui/BotonCambioEstado'
 import {
   ETIQUETA_TIPO_EVALUACION,
   type CalificacionDocente,
@@ -143,15 +143,15 @@ export function DocenteFichaPage({ id }: { id: number }) {
           <Button variant="outlined" startIcon={<EditOutlined />} onClick={() => setEditando(true)} sx={{ minHeight: 44 }}>
             Editar
           </Button>
-          <Button
-            variant="outlined"
-            color="error"
-            startIcon={<DeleteOutlined />}
-            onClick={() => setAEliminar(docente)}
-            sx={{ minHeight: 44 }}
-          >
-            Eliminar
-          </Button>
+          <BotonCambioEstado
+            ruta="/docentes"
+            id={docente.id}
+            sujeto={`${docente.nombres} ${docente.apellidos}`}
+            activo={docente.estado === 'ACTIVO'}
+            alDesactivar={{ estado: 'INACTIVO' }}
+            alActivar={{ estado: 'ACTIVO' }}
+            efecto="No podrá registrar calificaciones."
+          />
         </Stack>
       </Box>
 

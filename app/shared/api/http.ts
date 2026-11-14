@@ -65,3 +65,51 @@ export async function apiFetch<T>(path: string, options: RequestOptions = {}): P
   }
   return data as T
 }
+
+/** Respuesta de la API cuando no es JSON: falla con ApiError igual que apiFetch. */
+async function fallar(response: Response): Promise<never> {
+  const data: unknown = await response.json().catch(() => null)
+  if (response.status === 401) handlers.onUnauthorized()
+  throw new ApiError(response.status, normalizeMessages(data, `Error ${response.status}`))
+}
+
+function autorizacion(): Record<string, string> {
+  const token = handlers.getToken()
+  return token ? { Authorization: `Bearer ${token}` } : {}
+}
+
+/**
+ * Descarga un archivo de la API (p. ej. el respaldo) y lo guarda en el equipo con el nombre que manda el servidor.
+ * Devuelve ese nombre. Con `nombreFijo` se usa ese nombre en lugar del que manda el servidor.
+ */
+export async function apiDescargar(path: string, nombrePorDefecto = 'archivo', nombreFijo?: string): Promise<string> {
+  let response: Response
+  try {
+    response = await fetch(buildUrl(path), { headers: autorizacion() })
+  } catch {
+    throw new ApiError(0, ['No se pudo conectar con el servidor'])
+  }
+  if (!response.ok) return fallar(response)
+  const nombre = nombreFijo ?? /filename="([^"]+)"/.exec(response.headers.get('Content-Disposition') ?? '')?.[1] ?? nombrePorDefecto
+  const url = URL.createObjectURL(await response.blob())
+  const enlace = document.createElement('a')
+  enlace.href = url
+  enlace.download = nombre
+  document.body.append(enlace)
+  enlace.click()
+  enlace.remove()
+  URL.revokeObjectURL(url)
+  return nombre
+}
+
+/** Sube archivos con multipart/form-data (el navegador pone el Content-Type con su separador). */
+export async function apiSubir<T>(path: string, datos: FormData, method: 'POST' | 'PUT' = 'POST'): Promise<T> {
+  let response: Response
+  try {
+    response = await fetch(buildUrl(path), { method, headers: { Accept: 'application/json', ...autorizacion() }, body: datos })
+  } catch {
+    throw new ApiError(0, ['No se pudo conectar con el servidor'])
+  }
+  if (!response.ok) return fallar(response)
+  return (await response.json().catch(() => undefined)) as T
+}

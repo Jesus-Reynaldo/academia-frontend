@@ -1,9 +1,13 @@
 import AppBar from '@mui/material/AppBar'
+import BottomNavigation from '@mui/material/BottomNavigation'
+import BottomNavigationAction from '@mui/material/BottomNavigationAction'
+import Paper from '@mui/material/Paper'
 import Avatar from '@mui/material/Avatar'
 import Box from '@mui/material/Box'
 import Divider from '@mui/material/Divider'
 import Drawer from '@mui/material/Drawer'
 import IconButton from '@mui/material/IconButton'
+import LinearProgress from '@mui/material/LinearProgress'
 import List from '@mui/material/List'
 import ListItemButton from '@mui/material/ListItemButton'
 import ListItemIcon from '@mui/material/ListItemIcon'
@@ -18,13 +22,16 @@ import { useTheme } from '@mui/material/styles'
 import MenuIcon from '@mui/icons-material/Menu'
 import Logout from '@mui/icons-material/Logout'
 import LockReset from '@mui/icons-material/LockReset'
-import SchoolRounded from '@mui/icons-material/SchoolRounded'
-import { Fragment, useState, type ReactNode } from 'react'
-import { NavLink, useNavigate } from 'react-router'
+import { useIsFetching } from '@tanstack/react-query'
+import { motion } from 'motion/react'
+import { Fragment, useEffect, useState, type ReactNode } from 'react'
+import { NavLink, useLocation, useNavigate } from 'react-router'
 import { ETIQUETA_ROL, type Rol } from '../config/roles'
 import { iniciales } from '../lib/format'
 import { colors, SIDEBAR_WIDTH } from '../theme/tokens'
 import type { NavItem } from './navigation'
+import { LogoInstitucion } from '../institucion/LogoInstitucion'
+import { useInstitucion } from '../institucion/useInstitucion'
 
 interface AppShellProps {
   items: NavItem[]
@@ -38,16 +45,32 @@ export function AppShell({ items, user, onLogout, children }: AppShellProps) {
   const isDesktop = useMediaQuery(theme.breakpoints.up('lg'))
   const navigate = useNavigate()
   const [mobileOpen, setMobileOpen] = useState(false)
+  const location = useLocation()
+  // Estudiante en celular o tablet: sus 4 destinos van en una barra inferior fija, sin menú lateral.
+  const barraInferior = user.rol === 'ESTUDIANTE' && !isDesktop
+  const destinoActual =
+    [...items].sort((a, b) => b.to.length - a.to.length).find((item) => (item.to === '/' ? location.pathname === '/' : location.pathname.startsWith(item.to)))?.to ?? false
   const [menuAnchor, setMenuAnchor] = useState<HTMLElement | null>(null)
 
   const closeMobile = () => setMobileOpen(false)
+  const institucion = useInstitucion()
+  // La pestaña del navegador lleva el nombre de la institución.
+  useEffect(() => {
+    document.title = institucion.nombre
+  }, [institucion.nombre])
 
   const nav = (
-    <Box sx={{ bgcolor: colors.sidebar.bg, color: colors.sidebar.text, height: '100%' }}>
+    // minHeight (no height): si el menú es más largo que la pantalla, el fondo oscuro sigue hasta el final.
+    <Box sx={{ bgcolor: colors.sidebar.bg, color: colors.sidebar.text, minHeight: '100%' }}>
       <Toolbar sx={{ gap: 1.5 }}>
-        <SchoolRounded sx={{ color: '#fff' }} aria-hidden />
-        <Typography variant="h3" component="p" sx={{ color: '#fff', fontSize: '1.0625rem' }}>
-          Sistema Académico
+        <LogoInstitucion tamano={36} />
+        <Typography
+          variant="h3"
+          component="p"
+          title={institucion.nombre}
+          sx={{ color: '#fff', fontSize: '1rem', lineHeight: 1.25, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}
+        >
+          {institucion.sigla ?? institucion.nombre}
         </Typography>
       </Toolbar>
       <Divider sx={{ borderColor: 'rgba(255,255,255,0.12)' }} />
@@ -56,6 +79,8 @@ export function AppShell({ items, user, onLogout, children }: AppShellProps) {
           <Fragment key={item.to}>
             {item.group && item.group !== items[index - 1]?.group && (
               <ListSubheader
+                // Dentro de <nav> no hay <ul>: un <li> suelto viola la estructura de listas (axe listitem).
+                component="div"
                 disableSticky
                 sx={{
                   bgcolor: 'transparent',
@@ -75,6 +100,8 @@ export function AppShell({ items, user, onLogout, children }: AppShellProps) {
               component={NavLink}
               to={item.to}
               end={item.to === '/'}
+              // Descarga el código de la pantalla al apuntar o enfocar el enlace: abre al instante.
+              prefetch="intent"
               onClick={closeMobile}
               sx={{
                 borderRadius: 2,
@@ -116,6 +143,7 @@ export function AppShell({ items, user, onLogout, children }: AppShellProps) {
         Saltar al contenido
       </Box>
 
+      {!barraInferior && (
       <Drawer
         variant={isDesktop ? 'permanent' : 'temporary'}
         open={isDesktop || mobileOpen}
@@ -124,12 +152,21 @@ export function AppShell({ items, user, onLogout, children }: AppShellProps) {
         sx={{
           width: isDesktop ? SIDEBAR_WIDTH : 0,
           flexShrink: 0,
-          '& .MuiDrawer-paper': { width: SIDEBAR_WIDTH, border: 0, boxSizing: 'border-box' },
+          '& .MuiDrawer-paper': {
+            width: SIDEBAR_WIDTH,
+            border: 0,
+            boxSizing: 'border-box',
+            // Fondo oscuro en toda la zona desplazable y barra de desplazamiento a juego.
+            bgcolor: colors.sidebar.bg,
+            scrollbarColor: 'rgba(255,255,255,0.25) transparent',
+            scrollbarWidth: 'thin',
+          },
           '@media print': { display: 'none' },
         }}
       >
         {nav}
       </Drawer>
+      )}
 
       <Box sx={{ flexGrow: 1, minWidth: 0, display: 'flex', flexDirection: 'column' }}>
         <AppBar
@@ -139,8 +176,8 @@ export function AppShell({ items, user, onLogout, children }: AppShellProps) {
           sx={{ borderBottom: 1, borderColor: 'divider', '@media print': { display: 'none' } }}
         >
           <Toolbar>
-            {!isDesktop && (
-              <IconButton edge="start" aria-label="Abrir menú" onClick={() => setMobileOpen(true)} sx={{ mr: 1 }}>
+            {!isDesktop && !barraInferior && (
+              <IconButton edge="start" aria-label="Abrir menú" onClick={() => setMobileOpen(true)} sx={{ mr: 1, width: 44, height: 44 }}>
                 <MenuIcon />
               </IconButton>
             )}
@@ -209,12 +246,80 @@ export function AppShell({ items, user, onLogout, children }: AppShellProps) {
             mx: 'auto',
             px: { xs: 2, sm: 3, lg: 4 },
             py: { xs: 2, sm: 3 },
+            // Espacio para que la barra inferior no tape el final del contenido.
+            pb: barraInferior ? 11 : undefined,
             outline: 'none',
           }}
         >
-          {children}
+          <BarraCarga />
+          {/* La clave cambia con la ruta: cada pantalla entra con un fundido (MotionConfig lo apaga si se pidió reducir movimiento). */}
+          <motion.div
+            key={location.pathname}
+            initial={{ opacity: 0, y: 6 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.2, ease: 'easeOut' }}
+          >
+            {children}
+          </motion.div>
         </Box>
+
+        {barraInferior && (
+          <Paper
+            component="nav"
+            aria-label="Navegación principal"
+            elevation={8}
+            sx={{ position: 'fixed', left: 0, right: 0, bottom: 0, zIndex: (t) => t.zIndex.appBar, '@media print': { display: 'none' } }}
+          >
+            <BottomNavigation showLabels value={destinoActual} sx={{ height: 64 }}>
+              {items.map((item) => (
+                <BottomNavigationAction
+                  key={item.to}
+                  component={NavLink}
+                  to={item.to}
+                  end={item.to === '/'}
+                  prefetch="intent"
+                  value={item.to}
+                  label={item.label}
+                  icon={item.icon}
+                  sx={{
+                    minWidth: 0,
+                    px: 0.5,
+                    // Mismo tamaño de texto seleccionado o no, para que no se parta en dos líneas.
+                    '& .MuiBottomNavigationAction-label, & .MuiBottomNavigationAction-label.Mui-selected': { fontSize: '0.75rem', whiteSpace: 'nowrap' },
+                  }}
+                />
+              ))}
+            </BottomNavigation>
+          </Paper>
+        )}
       </Box>
+    </Box>
+  )
+}
+
+/**
+ * Línea fina arriba mientras se traen datos. Aparece solo si la carga pasa de 300 ms (sin parpadeos en cargas
+ * rápidas) y se oculta a lectores de pantalla cuando no hay carga.
+ */
+function BarraCarga() {
+  const cargando = useIsFetching() > 0
+  return (
+    <Box
+      aria-hidden={!cargando}
+      sx={{
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        right: 0,
+        zIndex: (t) => t.zIndex.appBar + 1,
+        opacity: cargando ? 1 : 0,
+        transition: 'opacity 200ms ease',
+        transitionDelay: cargando ? '300ms' : '0ms',
+        pointerEvents: 'none',
+        '@media print': { display: 'none' },
+      }}
+    >
+      <LinearProgress aria-label="Cargando datos" sx={{ height: 3 }} />
     </Box>
   )
 }

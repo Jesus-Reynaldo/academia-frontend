@@ -103,7 +103,6 @@ export function CalificacionFormDialog({ calificacion, onClose }: CalificacionFo
   const [errores, setErrores] = useState<string[]>([])
 
   // PASO 1: datos de apoyo para los selectores.
-  const inscripciones = useInscripcionesReferencia(!esEdicion)
   const materias = useMateriasReferencia()
   const cursos = useCursosReferencia()
   const periodos = usePeriodosReferencia()
@@ -120,6 +119,7 @@ export function CalificacionFormDialog({ calificacion, onClose }: CalificacionFo
     handleSubmit,
     reset,
     setFocus,
+    setValue,
     formState: { errors, isSubmitting, isDirty },
   } = useForm<CalificacionFormValues>({
     resolver: zodResolver(schema),
@@ -137,6 +137,8 @@ export function CalificacionFormDialog({ calificacion, onClose }: CalificacionFo
   })
 
   const cursoElegido = useWatch({ control, name: 'cursoId' })
+  // Todas las inscripciones activas del curso elegido (antes solo las 100 más recientes de todo el colegio).
+  const inscripciones = useInscripcionesReferencia(cursoElegido, !esEdicion)
   const notaTexto = useWatch({ control, name: 'nota' })
   const notaNumero = leerNota(notaTexto)
   const notaValida = notaNumero !== null && notaNumero >= NOTA_MIN && notaNumero <= NOTA_MAX
@@ -144,10 +146,9 @@ export function CalificacionFormDialog({ calificacion, onClose }: CalificacionFo
   const guardando = isSubmitting || crear.isPending || actualizar.isPending
 
   // PASO 3: la lista de inscripciones se acota con el curso elegido; las materias, solo las activas.
-  const opcionesInscripcion = (inscripciones.data?.data ?? []).filter(
-    (inscripcion) => cursoElegido === null || inscripcion.cursoId === cursoElegido,
+  const opcionesInscripcion = [...(inscripciones.data?.data ?? [])].sort((a, b) =>
+    `${a.estudiante.apellidos} ${a.estudiante.nombres}`.localeCompare(`${b.estudiante.apellidos} ${b.estudiante.nombres}`, 'es'),
   )
-  const hayMasInscripciones = (inscripciones.data?.meta.total ?? 0) > 100
   const materiasActivas = (materias.data ?? []).filter((materia) => materia.estado !== 'INACTIVA')
 
   // PASO 4: guardar. `registrarOtra` = true conserva curso, materia, tipo y fecha para la carga rápida.
@@ -264,11 +265,16 @@ export function CalificacionFormDialog({ calificacion, onClose }: CalificacionFo
                       value={field.value ?? ''}
                       onChange={(event) => {
                         field.onChange(event.target.value === '' ? null : Number(event.target.value))
+                        // Al cambiar de curso, el estudiante elegido antes ya no corresponde.
+                        setValue('inscripcionId', null)
                       }}
                       slotProps={{ select: { displayEmpty: true }, inputLabel: { shrink: true } }}
-                      helperText="Opcional: reduce la lista de inscripciones y se conserva al registrar otra."
+                      required
+                      helperText="Primero elige el curso: se listan todos sus estudiantes. Se conserva al registrar otra."
                     >
-                      <MenuItem value="">Todos los cursos</MenuItem>
+                      <MenuItem value="" disabled>
+                        Elige un curso
+                      </MenuItem>
                       {cursos.data?.map((curso) => (
                         <MenuItem key={curso.id} value={curso.id}>
                           {nombreCurso(curso)}
@@ -288,12 +294,13 @@ export function CalificacionFormDialog({ calificacion, onClose }: CalificacionFo
                       onChange={field.onChange}
                       onBlur={field.onBlur}
                       inputRef={field.ref}
-                      cargando={inscripciones.isPending}
+                      cargando={cursoElegido !== null && inscripciones.isFetching}
+                      deshabilitado={cursoElegido === null}
                       error={errors.inscripcionId?.message}
                       ayuda={
-                        hayMasInscripciones
-                          ? 'Se muestran las 100 inscripciones activas más recientes. Elige un curso para acotar.'
-                          : undefined
+                        cursoElegido === null
+                          ? 'Elige primero el curso.'
+                          : `${opcionesInscripcion.length} estudiantes activos en este curso.`
                       }
                     />
                   )}

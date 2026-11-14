@@ -10,15 +10,18 @@ import InputAdornment from '@mui/material/InputAdornment'
 import Stack from '@mui/material/Stack'
 import TextField from '@mui/material/TextField'
 import Typography from '@mui/material/Typography'
-import SchoolRounded from '@mui/icons-material/SchoolRounded'
 import Visibility from '@mui/icons-material/Visibility'
 import VisibilityOff from '@mui/icons-material/VisibilityOff'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { useState } from 'react'
+import { useQuery } from '@tanstack/react-query'
+import { useEffect, useState } from 'react'
 import { Controller, useForm } from 'react-hook-form'
 import { Navigate, useLocation, useNavigate } from 'react-router'
 import { z } from 'zod'
 import { ApiError } from '../../../shared/api/errors'
+import { apiFetch } from '../../../shared/api/http'
+import { LogoInstitucion } from '../../../shared/institucion/LogoInstitucion'
+import { useInstitucion } from '../../../shared/institucion/useInstitucion'
 import { useAuth } from '../context/auth-context'
 
 const loginSchema = z.object({
@@ -56,6 +59,28 @@ export function LoginPage() {
   const location = useLocation()
   const state = (location.state ?? {}) as LocationState
   const [showPassword, setShowPassword] = useState(false)
+  const institucion = useInstitucion()
+
+  // Render (plan gratis) duerme el servidor sin visitas: al abrir el login se lo despierta y, si tarda, se avisa.
+  const salud = useQuery({
+    queryKey: ['salud'],
+    // Cualquier respuesta del servidor (incluso 404 si su versión aún no tiene /salud) significa que está despierto;
+    // solo falla si no hay conexión.
+    queryFn: ({ signal }) =>
+      apiFetch<{ estado: string }>('/salud', { signal, auth: false }).catch((error: unknown) => {
+        if (error instanceof ApiError && error.status > 0) return { estado: 'despierto' }
+        throw error
+      }),
+    retry: 6,
+    retryDelay: 5000,
+    staleTime: 60 * 1000,
+  })
+  const [lento, setLento] = useState(false)
+  useEffect(() => {
+    if (!salud.isPending) return
+    const t = setTimeout(() => setLento(true), 1500)
+    return () => clearTimeout(t)
+  }, [salud.isPending])
   const [serverError, setServerError] = useState<string | null>(null)
 
   const {
@@ -82,40 +107,48 @@ export function LoginPage() {
   })
 
   return (
-    <Box
-      sx={{
-        minHeight: '100vh',
-        display: 'grid',
-        placeItems: 'center',
-        p: 2,
-        background: (theme) =>
-          `linear-gradient(160deg, ${theme.palette.primary.light} 0%, ${theme.palette.background.default} 60%)`,
-      }}
-    >
+    <div className="grid min-h-screen bg-fondo lg:grid-cols-2">
+      {/* Panel de marca: solo en pantallas grandes, decorativo para lectores de pantalla (el título real está en el formulario). */}
+      <div aria-hidden className="relative hidden overflow-hidden bg-gradient-to-br from-sidebar via-primary-dark to-primary p-12 text-white lg:flex lg:flex-col lg:justify-between">
+        <div className="flex items-center gap-3 text-lg font-semibold">
+          <LogoInstitucion tamano={48} />
+          {institucion.nombre}
+        </div>
+        <div className="max-w-md">
+          <p className="m-0 text-4xl font-bold leading-tight">Notas, cursos e historial en un solo lugar.</p>
+          <ul className="mt-8 list-none space-y-4 p-0 text-base text-white/85">
+            <li className="flex items-center gap-3"><span className="h-2 w-2 rounded-full bg-white" />Estudiantes: cómo voy en cada materia</li>
+            <li className="flex items-center gap-3"><span className="h-2 w-2 rounded-full bg-white" />Docentes: registrar notas por curso</li>
+            <li className="flex items-center gap-3"><span className="h-2 w-2 rounded-full bg-white" />Administración: todo el año escolar</li>
+          </ul>
+        </div>
+        <p className="m-0 text-sm text-white/60">Sistema académico{institucion.sigla ? ` · ${institucion.sigla}` : ''}</p>
+        <span className="pointer-events-none absolute -bottom-24 -right-24 h-80 w-80 rounded-full bg-white/10" />
+        <span className="pointer-events-none absolute -top-16 right-24 h-40 w-40 rounded-full bg-white/5" />
+      </div>
+      <div className="grid place-items-center p-4">
       <Card sx={{ width: '100%', maxWidth: 420 }}>
         <CardContent sx={{ p: { xs: 3, sm: 4 } }}>
           <Stack spacing={1} sx={{ mb: 3, alignItems: "center" }}>
-            <Box
-              sx={{
-                width: 56,
-                height: 56,
-                borderRadius: 3,
-                bgcolor: 'primary.main',
-                color: '#fff',
-                display: 'grid',
-                placeItems: 'center',
-              }}
-            >
-              <SchoolRounded fontSize="large" aria-hidden />
-            </Box>
-            <Typography variant="h1" component="h1" sx={{ fontSize: '1.5rem' }}>
-              Sistema Académico
+            <LogoInstitucion tamano={64} className="bg-primary text-white" />
+            <Typography variant="h1" component="h1" sx={{ fontSize: '1.5rem', textAlign: 'center' }}>
+              {institucion.nombre}
             </Typography>
             <Typography variant="body2" color="text.secondary">
               Ingresa con tu cuenta para continuar
             </Typography>
           </Stack>
 
+          {salud.isPending && lento && (
+            <Alert severity="info" icon={<CircularProgress size={20} />} sx={{ mb: 2 }} role="status">
+              Despertando el servidor… la primera vez puede tardar hasta un minuto.
+            </Alert>
+          )}
+          {salud.isError && (
+            <Alert severity="warning" sx={{ mb: 2 }}>
+              No se pudo contactar al servidor. Revisa tu conexión y vuelve a cargar la página.
+            </Alert>
+          )}
           {state.expired && !serverError && (
             <Alert severity="info" sx={{ mb: 2 }}>
               Tu sesión expiró. Vuelve a ingresar.
@@ -206,6 +239,7 @@ export function LoginPage() {
           )}
         </CardContent>
       </Card>
-    </Box>
+      </div>
+    </div>
   )
 }

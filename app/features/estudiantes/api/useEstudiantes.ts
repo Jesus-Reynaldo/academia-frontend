@@ -1,4 +1,5 @@
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { activosPrimero } from '../../../shared/api/activosPrimero'
 import type { EstadoEstudiante, EstudianteInput, EstudianteListParams, PaginaFichaParams } from '../model/types'
 import { estudiantesApi } from './estudiantes.api'
 
@@ -17,10 +18,17 @@ export const estudiantesKeys = {
 const CINCO_MINUTOS = 5 * 60 * 1000
 
 /** Listado paginado. Mantiene la página anterior visible mientras llega la nueva (sin parpadeo). */
+/** Orden de los grupos cuando no se filtra por estado: los inactivos van al final. */
+const ORDEN_ESTADOS = ['ACTIVO', 'EGRESADO', 'RETIRADO', 'INACTIVO'] as const
+
 export function useEstudiantesList(params: EstudianteListParams) {
   return useQuery({
     queryKey: estudiantesKeys.list(params),
-    queryFn: ({ signal }) => estudiantesApi.list(params, signal),
+    // Sin filtro de estado: los activos primero y los inactivos al final (cada grupo en el orden elegido).
+    queryFn: ({ signal }) =>
+      params.estado
+        ? estudiantesApi.list(params, signal)
+        : activosPrimero(ORDEN_ESTADOS, (estado, page, limit) => estudiantesApi.list({ ...params, estado, page, limit }, signal), params.page, params.limit),
     placeholderData: keepPreviousData,
   })
 }

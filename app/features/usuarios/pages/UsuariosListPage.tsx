@@ -15,6 +15,7 @@ import { DataTable, type DataTableColumn } from '../../../shared/ui/DataTable'
 import { EmptyState } from '../../../shared/ui/EmptyState'
 import { PageHeader } from '../../../shared/ui/PageHeader'
 import { QueryState } from '../../../shared/ui/QueryState'
+import { SearchField } from '../../../shared/ui/SearchField'
 import { StatusChip } from '../../../shared/ui/StatusChip'
 import { useUsuario } from '../../autenticacion'
 import { useUsuariosList } from '../api/useUsuarios'
@@ -34,6 +35,7 @@ function leerParametros(searchParams: URLSearchParams): UsuarioListParams {
   const sortBy = searchParams.get('sortBy')
   const order = searchParams.get('order')
   const rol = searchParams.get('rol')
+  const q = searchParams.get('q')?.trim()
 
   return {
     page: Number.isInteger(page) && page >= 1 ? page : 1,
@@ -41,6 +43,7 @@ function leerParametros(searchParams: URLSearchParams): UsuarioListParams {
     sortBy: CAMPOS_ORDENABLES.includes(sortBy as CampoOrdenable) ? (sortBy as CampoOrdenable) : 'email',
     order: order === 'desc' ? 'desc' : 'asc',
     rol: TODOS_LOS_ROLES.includes(rol as Rol) ? (rol as Rol) : undefined,
+    q: q || undefined,
   }
 }
 
@@ -56,6 +59,14 @@ export function UsuariosListPage() {
   const [aEliminar, setAEliminar] = useState<CuentaUsuario | null>(null)
 
   const total = query.data?.meta.total
+
+  // SearchField guarda su propio texto: se reinicia cambiando su `key` (al limpiar filtros).
+  const [busqueda, setBusqueda] = useState({ key: 0, inicial: params.q ?? '' })
+  const hayFiltros = params.rol !== undefined || params.q !== undefined
+  const limpiarFiltros = () => {
+    updateParams({ rol: null, q: null })
+    setBusqueda((actual) => ({ key: actual.key + 1, inicial: '' }))
+  }
 
   // Si se borró la única fila de la última página, retrocede una página en lugar de mostrar una vacía.
   const filasEnPagina = query.data?.data.length ?? 0
@@ -82,11 +93,11 @@ export function UsuariosListPage() {
     { id: 'activo', header: 'Estado', render: (u) => <StatusChip estado={u.activo ? 'ACTIVO' : 'INACTIVO'} /> },
   ]
 
-  const vacio = params.rol ? (
+  const vacio = hayFiltros ? (
     <EmptyState
-      title="No hay usuarios con este rol"
-      description="Prueba con otro rol o quita el filtro."
-      action={<Button onClick={() => updateParams({ rol: null })}>Limpiar filtros</Button>}
+      title="No hay usuarios que coincidan"
+      description="Prueba con otro texto u otro rol, o quita los filtros."
+      action={<Button onClick={limpiarFiltros}>Limpiar filtros</Button>}
     />
   ) : (
     <EmptyState title="Aún no hay usuarios" description="Crea una cuenta para que alguien pueda iniciar sesión." />
@@ -96,6 +107,7 @@ export function UsuariosListPage() {
     <>
       <PageHeader
         title="Usuarios"
+        modulo="usuarios"
         subtitle={
           // role="status": el lector de pantalla anuncia el nuevo total al filtrar.
           <span role="status">{total === undefined ? 'Cargando…' : `${total} ${total === 1 ? 'usuario' : 'usuarios'}`}</span>
@@ -110,6 +122,14 @@ export function UsuariosListPage() {
       <Card sx={{ mb: 2 }}>
         <CardContent sx={{ py: 1.5, '&:last-child': { pb: 1.5 } }}>
           <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.5} sx={{ alignItems: { sm: 'center' } }}>
+            <SearchField
+              key={busqueda.key}
+              label="Buscar"
+              placeholder="Email de la cuenta"
+              delayMs={300}
+              initialValue={busqueda.inicial}
+              onSearch={(texto) => updateParams({ q: texto }, { replace: true })}
+            />
             <TextField
               select
               label="Rol"
@@ -125,8 +145,8 @@ export function UsuariosListPage() {
                 </MenuItem>
               ))}
             </TextField>
-            {params.rol && (
-              <Button onClick={() => updateParams({ rol: null })} sx={{ alignSelf: { xs: 'flex-start', sm: 'center' }, minHeight: 44 }}>
+            {hayFiltros && (
+              <Button onClick={limpiarFiltros} sx={{ alignSelf: { xs: 'flex-start', sm: 'center' }, minHeight: 44 }}>
                 Limpiar filtros
               </Button>
             )}

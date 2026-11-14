@@ -1,4 +1,5 @@
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { activosPrimero } from '../../../shared/api/activosPrimero'
 import type {
   CalificacionesParams,
   EstadoMateria,
@@ -21,10 +22,17 @@ export const materiasKeys = {
 const CINCO_MINUTOS = 5 * 60 * 1000
 
 /** Listado paginado. Mantiene la página anterior visible mientras llega la nueva (sin parpadeo). */
+/** Orden de los grupos cuando no se filtra por estado: los inactivos van al final. */
+const ORDEN_ESTADOS = ['ACTIVA', 'INACTIVA'] as const
+
 export function useMateriasList(params: MateriaListParams) {
   return useQuery({
     queryKey: materiasKeys.list(params),
-    queryFn: ({ signal }) => materiasApi.list(params, signal),
+    // Sin filtro de estado: los activos primero y los inactivos al final (cada grupo en el orden elegido).
+    queryFn: ({ signal }) =>
+      params.estado
+        ? materiasApi.list(params, signal)
+        : activosPrimero(ORDEN_ESTADOS, (estado, page, limit) => materiasApi.list({ ...params, estado, page, limit }, signal), params.page, params.limit),
     placeholderData: keepPreviousData,
   })
 }

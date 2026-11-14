@@ -1,5 +1,4 @@
 import ArrowBack from '@mui/icons-material/ArrowBack'
-import DeleteOutlined from '@mui/icons-material/DeleteOutlined'
 import EditOutlined from '@mui/icons-material/EditOutlined'
 import Alert from '@mui/material/Alert'
 import Button from '@mui/material/Button'
@@ -19,6 +18,7 @@ import { useMateria } from '../api/useMaterias'
 import { CalificacionesDeMateria } from '../components/CalificacionesDeMateria'
 import { EliminarMateriaDialog } from '../components/EliminarMateriaDialog'
 import { MateriaFormDialog } from '../components/MateriaFormDialog'
+import { BotonCambioEstado } from '../../../shared/ui/BotonCambioEstado'
 
 const VOLVER = (
   <Button component={RouterLink} to="/materias" startIcon={<ArrowBack />} sx={{ mb: 1, minHeight: 44 }}>
@@ -65,6 +65,7 @@ export function MateriaDetallePage({ materiaId }: { materiaId: number | null }) 
           <>
             <PageHeader
               title={materia.nombre}
+              modulo="materias"
               subtitle={
                 <Stack direction="row" spacing={1} sx={{ alignItems: 'center', flexWrap: 'wrap' }}>
                   <span>Código {materia.codigo}</span>
@@ -82,15 +83,15 @@ export function MateriaDetallePage({ materiaId }: { materiaId: number | null }) 
                     >
                       Editar
                     </Button>
-                    <Button
-                      variant="outlined"
-                      color="error"
-                      startIcon={<DeleteOutlined />}
-                      onClick={() => setEliminando(true)}
-                      sx={{ minHeight: 44 }}
-                    >
-                      Eliminar
-                    </Button>
+                    <BotonCambioEstado
+                      ruta="/materias"
+                      id={materia.id}
+                      sujeto={materia.nombre}
+                      activo={materia.estado === 'ACTIVA'}
+                      alDesactivar={{ estado: 'INACTIVA' }}
+                      alActivar={{ estado: 'ACTIVA' }}
+                      efecto="No se podrá elegir para nuevas calificaciones."
+                    />
                   </>
                 )
               }
@@ -103,7 +104,7 @@ export function MateriaDetallePage({ materiaId }: { materiaId: number | null }) 
             )}
 
             <Stack spacing={2}>
-              <SectionCard title="Datos de la materia">
+              <SectionCard modulo="materias" title="Datos de la materia">
                 <DefinitionList
                   items={[
                     { label: 'Código', value: materia.codigo },
@@ -117,7 +118,7 @@ export function MateriaDetallePage({ materiaId }: { materiaId: number | null }) 
               </SectionCard>
 
               {puedeVerCalificaciones && (
-                <SectionCard title="Calificaciones">
+                <SectionCard modulo="calificaciones" title="Calificaciones">
                   <CalificacionesDeMateria materiaId={materia.id} />
                 </SectionCard>
               )}

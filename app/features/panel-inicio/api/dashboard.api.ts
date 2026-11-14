@@ -45,6 +45,21 @@ export const dashboardApi = {
     apiFetch<Paginated<CalificacionDashboard>>(`/docentes/${id}/calificaciones`, {
       query: { page: 1, limit: 100, order: 'desc' },
     }),
+  /** Cursos activos donde el docente tiene calificaciones, con su total (un conteo por curso). */
+  cursosDocente: async (id: number) => {
+    const cursos = await apiFetch<Paginated<{ id: number; nombre: string }>>('/cursos', {
+      query: { page: 1, limit: 100, estado: 'ACTIVO', sortBy: 'nombre', order: 'asc' },
+    })
+    const conTotal = await Promise.all(
+      cursos.data.map(async (curso) => {
+        const notas = await apiFetch<Paginated<unknown>>('/calificaciones', {
+          query: { docenteId: id, cursoId: curso.id, page: 1, limit: 1 },
+        })
+        return { id: curso.id, nombre: curso.nombre, total: notas.meta.total }
+      }),
+    )
+    return conTotal.filter((curso) => curso.total > 0)
+  },
   calificacionesDocentePorCurso: (id: number, cursoId: number, limit: number) =>
     apiFetch<Paginated<CalificacionDashboard>>('/calificaciones', {
       query: { docenteId: id, cursoId, page: 1, limit, sortBy: 'id', order: 'desc' },

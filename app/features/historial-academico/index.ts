@@ -1,1 +1,5 @@
 export { HistorialAcademicoPage } from './pages/HistorialAcademicoPage'
+export { useAvanceEstudiante } from './api/useAvanceEstudiante'
+export { NotaHistorial } from './components/NotaHistorial'
+export { desglosar, estaDebajo, resumenPeriodo } from './model/desglose'
+export type { HistorialCurso, HistorialMateria, HistorialPeriodo } from './model/types'

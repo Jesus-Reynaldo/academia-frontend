@@ -1,64 +1,37 @@
-import DeleteOutlined from '@mui/icons-material/DeleteOutlined'
 import EditOutlined from '@mui/icons-material/EditOutlined'
-import MoreVert from '@mui/icons-material/MoreVert'
-import IconButton from '@mui/material/IconButton'
-import ListItemIcon from '@mui/material/ListItemIcon'
-import ListItemText from '@mui/material/ListItemText'
-import Menu from '@mui/material/Menu'
-import MenuItem from '@mui/material/MenuItem'
-import { useId, useState } from 'react'
+import VisibilityOutlined from '@mui/icons-material/VisibilityOutlined'
+import { AccionesFila, type AccionFila } from '../../../shared/ui/AccionesFila'
+import { useCambioEstado } from '../../../shared/ui/useCambioEstado'
 import type { Materia } from '../model/types'
 
 interface MateriaRowMenuProps {
   materia: Materia
   onEdit: (materia: Materia) => void
-  onDelete: (materia: Materia) => void
+  /** Ya no se usa: en lugar de eliminar se desactiva (los datos no se borran). */
+  onDelete?: (materia: Materia) => void
 }
 
-/** Menú ⋮ de acciones por fila. Solo se renderiza para ADMIN (la API también lo exige). */
-export function MateriaRowMenu({ materia, onEdit, onDelete }: MateriaRowMenuProps) {
-  const menuId = useId()
-  const [anchor, setAnchor] = useState<HTMLElement | null>(null)
-  const open = Boolean(anchor)
-  const close = () => setAnchor(null)
-
+/** Acciones de la fila como íconos. Desactivar reemplaza a Eliminar: nunca se pierden datos. Solo ADMIN. */
+export function MateriaRowMenu({ materia, onEdit }: MateriaRowMenuProps) {
+  const sujeto = materia.nombre
+  const estado = useCambioEstado({
+    ruta: '/materias',
+    id: materia.id,
+    sujeto,
+    activo: materia.estado === 'ACTIVA' ? true : materia.estado === 'INACTIVA' ? false : null,
+    alDesactivar: { estado: 'INACTIVA' },
+    alActivar: { estado: 'ACTIVA' },
+    efecto: 'Pasará al final de la lista y no se podrá elegir para nuevas calificaciones.',
+  })
+  const acciones: AccionFila[] = [
+    { etiqueta: 'Ver detalle', icono: <VisibilityOutlined />, to: `/materias/${materia.id}` },
+    { etiqueta: 'Editar', icono: <EditOutlined />, onClick: () => onEdit(materia) },
+  ]
+  if (estado.accion) acciones.push(estado.accion)
   return (
     <>
-      <IconButton
-        aria-label={`Acciones de ${materia.nombre}`}
-        aria-haspopup="menu"
-        aria-controls={open ? menuId : undefined}
-        aria-expanded={open ? 'true' : undefined}
-        onClick={(event) => setAnchor(event.currentTarget)}
-        sx={{ width: 44, height: 44 }}
-      >
-        <MoreVert />
-      </IconButton>
-      <Menu id={menuId} anchorEl={anchor} open={open} onClose={close}>
-        <MenuItem
-          onClick={() => {
-            close()
-            onEdit(materia)
-          }}
-        >
-          <ListItemIcon>
-            <EditOutlined fontSize="small" />
-          </ListItemIcon>
-          <ListItemText>Editar</ListItemText>
-        </MenuItem>
-        <MenuItem
-          onClick={() => {
-            close()
-            onDelete(materia)
-          }}
-          sx={{ color: 'error.main' }}
-        >
-          <ListItemIcon sx={{ color: 'inherit' }}>
-            <DeleteOutlined fontSize="small" />
-          </ListItemIcon>
-          <ListItemText>Eliminar</ListItemText>
-        </MenuItem>
-      </Menu>
+      <AccionesFila sujeto={sujeto} acciones={acciones} />
+      {estado.dialogo}
     </>
   )
 }

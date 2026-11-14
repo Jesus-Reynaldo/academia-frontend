@@ -17,6 +17,8 @@ interface InscripcionAutocompleteProps {
   error?: string
   /** Texto de ayuda cuando no hay error. */
   ayuda?: ReactNode
+  /** Deshabilitado hasta que se elija el curso. */
+  deshabilitado?: boolean
 }
 
 /**
@@ -32,6 +34,7 @@ export function InscripcionAutocomplete({
   cargando = false,
   error,
   ayuda,
+  deshabilitado = false,
 }: InscripcionAutocompleteProps) {
   const seleccionada = opciones.find((opcion) => opcion.id === value) ?? null
 
@@ -40,6 +43,7 @@ export function InscripcionAutocomplete({
       options={opciones}
       value={seleccionada}
       loading={cargando}
+      disabled={deshabilitado}
       getOptionLabel={etiquetaInscripcion}
       isOptionEqualToValue={(opcion, valor) => opcion.id === valor.id}
       onChange={(_event, opcion) => onChange(opcion?.id ?? null)}

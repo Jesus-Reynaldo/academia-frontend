@@ -1,5 +1,4 @@
 import ArrowBack from '@mui/icons-material/ArrowBack'
-import DeleteOutlined from '@mui/icons-material/DeleteOutlined'
 import EditOutlined from '@mui/icons-material/EditOutlined'
 import Alert from '@mui/material/Alert'
 import Box from '@mui/material/Box'
@@ -28,6 +27,7 @@ import { EstudiantesDelCurso } from '../components/EstudiantesDelCurso'
 import { MateriasDelCurso } from '../components/MateriasDelCurso'
 import { OcupacionCurso } from '../components/OcupacionCurso'
 import type { PaginaDetalleParams } from '../model/types'
+import { BotonCambioEstado } from '../../../shared/ui/BotonCambioEstado'
 
 const LIMITES = [10, 20, 50]
 type Pestana = 'estudiantes' | 'materias'
@@ -96,6 +96,7 @@ export function CursoDetallePage({ id }: { id: number }) {
           <Migas nombre={curso.nombre} />
           <PageHeader
             title={curso.nombre}
+            modulo="cursos"
             subtitle={
               <Stack direction="row" spacing={1} sx={{ alignItems: 'center', flexWrap: 'wrap' }}>
                 <span>{curso.paralelo ? `${curso.nivel} · Paralelo ${curso.paralelo}` : curso.nivel}</span>
@@ -113,15 +114,15 @@ export function CursoDetallePage({ id }: { id: number }) {
                   >
                     Editar
                   </Button>
-                  <Button
-                    variant="outlined"
-                    color="error"
-                    startIcon={<DeleteOutlined />}
-                    onClick={() => setEliminando(true)}
-                    sx={{ minHeight: 44 }}
-                  >
-                    Eliminar
-                  </Button>
+                  <BotonCambioEstado
+                    ruta="/cursos"
+                    id={curso.id}
+                    sujeto={curso.nombre}
+                    activo={curso.estado === 'ACTIVO'}
+                    alDesactivar={{ estado: 'INACTIVO' }}
+                    alActivar={{ estado: 'ACTIVO' }}
+                    efecto="No se podrá elegir para nuevas inscripciones."
+                  />
                 </>
               )
             }
