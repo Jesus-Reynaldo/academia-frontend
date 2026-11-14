@@ -1,5 +1,6 @@
 import AccountCircleOutlined from '@mui/icons-material/AccountCircleOutlined'
 import AssignmentIndOutlined from '@mui/icons-material/AssignmentIndOutlined'
+import BackupOutlined from '@mui/icons-material/BackupOutlined'
 import BadgeOutlined from '@mui/icons-material/BadgeOutlined'
 import ClassOutlined from '@mui/icons-material/ClassOutlined'
 import EventNoteOutlined from '@mui/icons-material/EventNoteOutlined'
@@ -25,6 +26,7 @@ export type Modulo =
   | 'historial'
   | 'cuenta'
   | 'bitacora'
+  | 'respaldo'
 
 /**
  * Un solo ícono por módulo en TODO el sistema: menú lateral, barra inferior, encabezados de página,
@@ -43,4 +45,5 @@ export const ICONO_MODULO: Record<Modulo, SvgIconComponent> = {
   historial: HistoryEduOutlined,
   cuenta: AccountCircleOutlined,
   bitacora: ManageHistoryOutlined,
+  respaldo: BackupOutlined,
 }

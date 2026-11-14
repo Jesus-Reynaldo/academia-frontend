@@ -30,6 +30,7 @@ export function navigationFor(rol: Rol): NavItem[] {
         item('Inscripciones', '/inscripciones', 'inscripciones', 'Gestión'),
         item('Calificaciones', '/calificaciones', 'calificaciones', 'Gestión'),
         item('Bitácora', '/bitacora', 'bitacora', 'Gestión'),
+        item('Respaldo', '/respaldo', 'respaldo', 'Gestión'),
       ]
     case 'DOCENTE':
       return [

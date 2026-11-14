@@ -23,6 +23,7 @@ export default [
     route('calificaciones', 'routes/calificaciones.tsx'),
     route('usuarios', 'routes/usuarios.tsx'),
     route('bitacora', 'routes/bitacora.tsx'),
+    route('respaldo', 'routes/respaldo.tsx'),
     route('mi/calificaciones', 'routes/mi-calificaciones.tsx'),
     route('mi/historial', 'routes/mi-historial.tsx'),
     route('mi/inscripciones', 'routes/mi-inscripciones.tsx'),
