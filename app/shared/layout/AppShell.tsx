@@ -60,7 +60,8 @@ export function AppShell({ items, user, onLogout, children }: AppShellProps) {
   }, [institucion.nombre])
 
   const nav = (
-    <Box sx={{ bgcolor: colors.sidebar.bg, color: colors.sidebar.text, height: '100%' }}>
+    // minHeight (no height): si el menú es más largo que la pantalla, el fondo oscuro sigue hasta el final.
+    <Box sx={{ bgcolor: colors.sidebar.bg, color: colors.sidebar.text, minHeight: '100%' }}>
       <Toolbar sx={{ gap: 1.5 }}>
         <LogoInstitucion tamano={36} />
         <Typography
@@ -151,7 +152,15 @@ export function AppShell({ items, user, onLogout, children }: AppShellProps) {
         sx={{
           width: isDesktop ? SIDEBAR_WIDTH : 0,
           flexShrink: 0,
-          '& .MuiDrawer-paper': { width: SIDEBAR_WIDTH, border: 0, boxSizing: 'border-box' },
+          '& .MuiDrawer-paper': {
+            width: SIDEBAR_WIDTH,
+            border: 0,
+            boxSizing: 'border-box',
+            // Fondo oscuro en toda la zona desplazable y barra de desplazamiento a juego.
+            bgcolor: colors.sidebar.bg,
+            scrollbarColor: 'rgba(255,255,255,0.25) transparent',
+            scrollbarWidth: 'thin',
+          },
           '@media print': { display: 'none' },
         }}
       >
