@@ -5,8 +5,9 @@ import { inscripcionesApi } from '../api/inscripciones.api'
 
 /**
  * Importación de inscripciones desde Excel (solo ADMIN).
- * Una fila = una inscripción. Si el código del estudiante ya existe se usa ese estudiante; si no, se crea con los
- * datos de la fila. El curso y la gestión se eligen de listas desplegables con los nombres del sistema.
+ * Una fila = una inscripción. Un estudiante existente se identifica por su código o su documento (CI); uno nuevo
+ * se deja sin código y se crea con los datos de la fila: el servidor le asigna el código (EST-0201…), así no se
+ * repite aunque varias personas inscriban a la vez. El curso y la gestión se eligen de listas desplegables con los nombres del sistema.
  * No hay endpoint masivo: se usan los mismos POST /estudiantes y POST /inscripciones que la pantalla (la bitácora
  * registra cada alta y el servidor aplica sus reglas: cupo del curso, inscripción repetida…).
  */
@@ -23,8 +24,8 @@ export interface Contexto {
 
 /** Columnas de la hoja «Inscripciones» (el orden importa: es el de la planilla). */
 export const COLUMNAS = [
-  { clave: 'codigo', titulo: 'Código del estudiante *', ancho: 22, nota: 'Obligatorio. Si ya existe, se usa ese estudiante.' },
-  { clave: 'documento', titulo: 'Documento (CI)', ancho: 16, nota: 'Solo para estudiantes nuevos (obligatorio).' },
+  { clave: 'codigo', titulo: 'Código (solo si ya existe)', ancho: 22, nota: 'Vacío si el estudiante es nuevo: el sistema le asigna el código.' },
+  { clave: 'documento', titulo: 'Documento (CI)', ancho: 16, nota: 'Obligatorio para estudiantes nuevos. Si el CI ya existe, se usa ese estudiante.' },
   { clave: 'nombres', titulo: 'Nombres', ancho: 22, nota: 'Solo para estudiantes nuevos (obligatorio).' },
   { clave: 'apellidos', titulo: 'Apellidos', ancho: 24, nota: 'Solo para estudiantes nuevos (obligatorio).' },
   { clave: 'email', titulo: 'Email', ancho: 28, nota: 'Opcional.' },
@@ -84,7 +85,7 @@ export async function descargarPlantilla(ctx: Contexto, institucion: string) {
   encabezado.height = 30
   encabezado.eachCell((celda, n) => {
     celda.font = { bold: true, color: { argb: 'FFFFFFFF' } }
-    celda.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: n === 1 || n >= 8 ? 'FF1E2F8A' : 'FF2740B8' } }
+    celda.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: n >= 8 ? 'FF1E2F8A' : 'FF2740B8' } }
     celda.alignment = { vertical: 'middle', horizontal: 'center', wrapText: true }
     celda.note = COLUMNAS[n - 1].nota
   })
@@ -109,14 +110,15 @@ export async function descargarPlantilla(ctx: Contexto, institucion: string) {
     [`${institucion} · generada el ${new Date().toLocaleDateString('es-BO')}`, false],
     ['', false],
     ['1. Llena una fila por cada inscripción en la hoja «Inscripciones» (no cambies los títulos).', false],
-    ['2. «Código del estudiante» es obligatorio. Si el código ya existe en el sistema, se inscribe a ese estudiante.', false],
-    ['3. Si el estudiante es NUEVO, completa también Documento, Nombres y Apellidos (Email, Teléfono y Fecha de nacimiento son opcionales).', false],
+    ['2. Estudiante que YA EXISTE: basta con su Código o su Documento (CI); el resto de sus datos puede quedar vacío.', false],
+    ['3. Estudiante NUEVO: deja el Código VACÍO y completa Documento, Nombres y Apellidos (Email, Teléfono y Fecha de nacimiento son opcionales). El sistema le asigna el código al guardar.', false],
     ['4. Curso y Gestión se eligen de las listas desplegables (son los nombres que existen en el sistema).', false],
     ['5. Fechas en formato dd/mm/aaaa. Si la fecha de inscripción queda vacía, se usa la fecha del día.', false],
     ['6. Sube la planilla en Inscripciones → «Importar Excel». Antes de guardar verás una vista previa con los errores de cada fila.', false],
     ['', false],
     ['Ejemplo', true],
-    ['EST-0201 | 9876543 LP | Ana María | Quispe Mamani | ana.quispe@correo.com | 70000000 | 15/03/2012 | 1ro Secundaria A | Gestión 2026 | 01/02/2026', false],
+    ['Nuevo:  (vacío) | 9876543 LP | Ana María | Quispe Mamani | ana.quispe@correo.com | 70000000 | 15/03/2012 | 1ro Secundaria A | Gestión 2026 | 01/02/2026', false],
+    ['Existente:  EST-0051 | (vacío) | (vacío) | (vacío) | | | | 2do Secundaria B | Gestión 2026 |', false],
   ] as const
   lineas.forEach(([texto, negrita], i) => {
     const c = ins.getCell(`A${i + 1}`)
@@ -176,12 +178,15 @@ function fecha(v: unknown): string | null | 'invalida' {
 
 export interface FilaImportacion {
   fila: number
+  /** Código del estudiante existente; vacío si es nuevo (lo asigna el servidor). */
   codigo: string
+  /** Identifica al estudiante dentro del archivo (repetidas y nuevos en varias filas). */
+  clave: string
   nombre: string
   /** El estudiante ya existe (se usa) o se creará con los datos de la fila. */
   accion: 'existente' | 'nuevo'
   estudianteId?: number
-  estudianteNuevo?: { codigo: string; documento: string; nombres: string; apellidos: string; email?: string; telefono?: string; fechaNacimiento?: string }
+  estudianteNuevo?: { documento: string; nombres: string; apellidos: string; email?: string; telefono?: string; fechaNacimiento?: string }
   curso: string
   cursoId?: number
   gestion: string
@@ -211,7 +216,6 @@ export async function leerPlanilla(archivo: File, ctx: Contexto): Promise<FilaIm
   const cursoPorNombre = new Map(ctx.cursos.map((c) => [normal(c.nombre), c]))
   const periodoPorNombre = new Map(ctx.periodos.map((p) => [normal(p.nombre), p]))
   const vistos = new Map<string, number>()
-  const nuevosEnArchivo = new Map<string, number>()
   const filas: FilaImportacion[] = []
 
   hoja.eachRow({ includeEmpty: false }, (row, n) => {
@@ -221,29 +225,37 @@ export async function leerPlanilla(archivo: File, ctx: Contexto): Promise<FilaIm
     if (COLUMNAS.every((c) => !t(c.clave))) return // fila vacía
     const errores: string[] = []
     const codigo = t('codigo')
-    if (!codigo) errores.push('Falta el código del estudiante.')
-    const existente = codigo ? porCodigo.get(normal(codigo)) : undefined
+    const documento = t('documento')
+    // Existente: por código o, si no hay código, por documento. Sin código y con un CI nuevo: estudiante nuevo.
+    const porSuCodigo = codigo ? porCodigo.get(normal(codigo)) : undefined
+    const porSuDocumento = documento ? porDocumento.get(normal(documento)) : undefined
+    const existente = codigo ? porSuCodigo : porSuDocumento
     const fila: FilaImportacion = {
-      fila: n, codigo, nombre: '', accion: existente ? 'existente' : 'nuevo', curso: t('curso'), gestion: t('gestion'), errores,
+      fila: n, codigo: existente?.codigo ?? codigo, clave: '', nombre: '', accion: existente || codigo ? 'existente' : 'nuevo',
+      curso: t('curso'), gestion: t('gestion'), errores,
     }
-    if (existente) {
+    if (codigo && !porSuCodigo) {
+      fila.nombre = '(no encontrado)'
+      errores.push(`El código ${codigo} no existe. Si es un estudiante nuevo, deja el código vacío: el sistema le asigna uno.`)
+    } else if (existente) {
       fila.estudianteId = existente.id
+      fila.clave = `id:${existente.id}`
       fila.nombre = `${existente.apellidos}, ${existente.nombres}`
-    } else if (codigo) {
-      const [documento, nombres, apellidos, email, telefono] = [t('documento'), t('nombres'), t('apellidos'), t('email'), t('telefono')]
-      fila.nombre = apellidos || nombres ? `${apellidos}, ${nombres}` : '(estudiante nuevo)'
-      if (!documento) errores.push('Estudiante nuevo: falta el documento.')
+      if (codigo && porSuDocumento && porSuDocumento.id !== existente.id) {
+        errores.push(`El documento ${documento} es de ${porSuDocumento.codigo}, no de ${existente.codigo}.`)
+      }
+    } else {
+      const [nombres, apellidos, email, telefono] = [t('nombres'), t('apellidos'), t('email'), t('telefono')]
+      fila.clave = documento ? `doc:${normal(documento)}` : `fila:${n}`
+      fila.nombre = [apellidos, nombres].filter(Boolean).join(', ') || '(estudiante nuevo)'
+      if (!documento) errores.push('Estudiante nuevo: falta el documento (o el código, si ya existe).')
       if (!nombres) errores.push('Estudiante nuevo: faltan los nombres.')
       if (!apellidos) errores.push('Estudiante nuevo: faltan los apellidos.')
-      const otro = documento ? porDocumento.get(normal(documento)) : undefined
-      if (otro) errores.push(`El documento ${documento} ya pertenece a ${otro.codigo} (${otro.apellidos}, ${otro.nombres}).`)
       if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) errores.push('El email no es válido.')
       const nac = fecha(v.fechaNacimiento)
       if (nac === 'invalida') errores.push('La fecha de nacimiento no es válida (dd/mm/aaaa).')
-      const anterior = nuevosEnArchivo.get(normal(codigo))
-      if (anterior === undefined) nuevosEnArchivo.set(normal(codigo), n)
       fila.estudianteNuevo = {
-        codigo, documento, nombres, apellidos,
+        documento, nombres, apellidos,
         email: email || undefined, telefono: telefono || undefined, fechaNacimiento: nac && nac !== 'invalida' ? nac : undefined,
       }
     }
@@ -258,8 +270,8 @@ export async function leerPlanilla(archivo: File, ctx: Contexto): Promise<FilaIm
     const fIns = fecha(v.fechaInscripcion)
     if (fIns === 'invalida') errores.push('La fecha de inscripción no es válida (dd/mm/aaaa).')
     else if (fIns) fila.fechaInscripcion = fIns
-    if (codigo && fila.gestion) {
-      const clave = `${normal(codigo)}|${normal(fila.gestion)}`
+    if (fila.clave && fila.gestion) {
+      const clave = `${fila.clave}|${normal(fila.gestion)}`
       const repetida = vistos.get(clave)
       if (repetida) errores.push(`Repetida: el mismo estudiante ya está en la fila ${repetida} para esta gestión.`)
       else vistos.set(clave, n)
@@ -275,20 +287,25 @@ export interface ResultadoFila {
   nombre: string
   ok: boolean
   mensaje: string
+  /** Código del estudiante (el asignado por el servidor si se creó). */
+  codigo?: string
 }
 
 /** Crea los estudiantes nuevos y las inscripciones de las filas sin errores, una por una. */
 export async function importarFilas(filas: FilaImportacion[], alAvanzar: (hechas: number) => void): Promise<ResultadoFila[]> {
-  const creados = new Map<string, number>()
+  // Un estudiante nuevo que aparece en varias filas (otras gestiones) se crea una sola vez.
+  const creados = new Map<string, { id: number; codigo: string }>()
   const resultados: ResultadoFila[] = []
   for (const [i, f] of filas.entries()) {
+    let codigo = f.codigo || creados.get(f.clave)?.codigo
     try {
-      let estudianteId = f.estudianteId ?? creados.get(normal(f.codigo))
+      let estudianteId = f.estudianteId ?? creados.get(f.clave)?.id
       let creado = false
       if (!estudianteId && f.estudianteNuevo) {
-        const e = await apiFetch<{ id: number }>('/estudiantes', { method: 'POST', body: f.estudianteNuevo })
+        const e = await apiFetch<{ id: number; codigo: string }>('/estudiantes', { method: 'POST', body: f.estudianteNuevo })
         estudianteId = e.id
-        creados.set(normal(f.codigo), e.id)
+        codigo = e.codigo
+        creados.set(f.clave, { id: e.id, codigo: e.codigo })
         creado = true
       }
       await inscripcionesApi.create({
@@ -297,10 +314,10 @@ export async function importarFilas(filas: FilaImportacion[], alAvanzar: (hechas
         periodoAcademicoId: f.periodoId as number,
         fechaInscripcion: f.fechaInscripcion,
       })
-      resultados.push({ fila: f.fila, nombre: f.nombre, ok: true, mensaje: creado ? 'Estudiante creado e inscrito.' : 'Inscrito.' })
+      resultados.push({ fila: f.fila, nombre: f.nombre, codigo, ok: true, mensaje: creado ? `Estudiante creado con el código ${codigo} e inscrito.` : 'Inscrito.' })
     } catch (error) {
       const mensaje = error instanceof ApiError ? error.messages.join(' ') : friendlyMessage(error)
-      resultados.push({ fila: f.fila, nombre: f.nombre, ok: false, mensaje })
+      resultados.push({ fila: f.fila, nombre: f.nombre, codigo, ok: false, mensaje })
     }
     alAvanzar(i + 1)
   }

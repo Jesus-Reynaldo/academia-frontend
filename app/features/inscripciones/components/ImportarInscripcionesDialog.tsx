@@ -62,7 +62,7 @@ export function ImportarInscripcionesDialog({ onClose }: { onClose: () => void }
 
   const validas = filas.filter((f) => f.errores.length === 0)
   const conErrores = filas.length - validas.length
-  const nuevos = new Set(validas.filter((f) => f.accion === 'nuevo').map((f) => f.codigo.toLowerCase())).size
+  const nuevos = new Set(validas.filter((f) => f.accion === 'nuevo').map((f) => f.clave)).size
 
   const descargar = async () => {
     if (!contexto.data) return
@@ -134,7 +134,7 @@ export function ImportarInscripcionesDialog({ onClose }: { onClose: () => void }
             <Paso numero={1} titulo="Descarga la planilla">
               <Typography variant="body2" color="text.secondary" sx={{ mb: 1.5 }}>
                 Trae listas desplegables con los {contexto.data.cursos.length} cursos activos y las {contexto.data.periodos.length} gestiones vigentes, e instrucciones.
-                Si el código del estudiante ya existe se usa; si es nuevo, se crea con sus datos.
+                A un estudiante que ya existe lo encuentra por su código o su CI; a uno nuevo se le deja el código vacío y el sistema se lo asigna al guardar.
               </Typography>
               <Button variant="outlined" startIcon={descargando ? <CircularProgress size={18} /> : <DownloadOutlined />} disabled={descargando} onClick={() => void descargar()} sx={{ minHeight: 44 }}>
                 Descargar planilla vacía
@@ -194,8 +194,8 @@ function VistaPrevia({ filas }: { filas: FilaImportacion[] }) {
             <tr key={f.fila} className={`border-t border-borde align-top ${f.errores.length ? 'bg-peligro-tint/40' : ''}`}>
               <td className="px-2 py-1.5">{f.fila}</td>
               <td className="px-2 py-1.5">
-                <span className="font-semibold">{f.codigo || '—'}</span> {f.nombre}
-                {f.accion === 'nuevo' && f.codigo && <span className="ml-1 rounded bg-primary-tint px-1.5 text-xs text-primary">nuevo</span>}
+                {f.codigo && <span className="font-semibold">{f.codigo}</span>} {f.nombre}
+                {f.accion === 'nuevo' && <span className="ml-1 rounded bg-primary-tint px-1.5 text-xs text-primary">nuevo · código automático</span>}
               </td>
               <td className="px-2 py-1.5">{f.curso || '—'}</td>
               <td className="px-2 py-1.5">{f.gestion || '—'}</td>
@@ -225,7 +225,7 @@ function ListaResultados({ resultados }: { resultados: ResultadoFila[] }) {
           {resultados.map((r) => (
             <tr key={r.fila} className="border-t border-borde align-top">
               <td className="px-2 py-1.5">{r.fila}</td>
-              <td className="px-2 py-1.5">{r.nombre}</td>
+              <td className="px-2 py-1.5">{r.codigo && <span className="font-semibold">{r.codigo} </span>}{r.nombre}</td>
               <td className={`px-2 py-1.5 font-medium ${r.ok ? 'text-ok' : 'text-peligro'}`}>{r.ok ? '✓' : '✗'} {r.mensaje}</td>
             </tr>
           ))}
