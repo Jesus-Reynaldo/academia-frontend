@@ -163,7 +163,8 @@ export function CursosListPage() {
           >
             <SearchField
               key={busqueda.key}
-              label="Buscar por nombre"
+              label="Buscar"
+              placeholder="Nombre, nivel o paralelo"
               initialValue={busqueda.inicial}
               onSearch={(nombre) => updateParams({ nombre }, { replace: true })}
             />

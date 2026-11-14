@@ -56,5 +56,7 @@ export interface BitacoraParams {
   page: number
   limit: number
   recurso?: RecursoBitacora
+  /** Búsqueda por contenido: descripción, módulo o email de quien lo hizo. */
+  q?: string
   accion?: AccionBitacora
 }

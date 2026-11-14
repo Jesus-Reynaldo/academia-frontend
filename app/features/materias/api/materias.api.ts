@@ -13,8 +13,9 @@ import type {
 const BASE = '/materias'
 
 export const materiasApi = {
-  list: (params: Partial<MateriaListParams>, signal?: AbortSignal) =>
-    apiFetch<Paginated<Materia>>(BASE, { query: params, signal }),
+  // El texto del buscador viaja como «q»: el servidor lo busca palabra por palabra en todas las columnas visibles.
+  list: ({ nombre, ...params }: Partial<MateriaListParams>, signal?: AbortSignal) =>
+    apiFetch<Paginated<Materia>>(BASE, { query: { ...params, q: nombre }, signal }),
 
   get: (id: number, signal?: AbortSignal) => apiFetch<Materia>(`${BASE}/${id}`, { signal }),
 

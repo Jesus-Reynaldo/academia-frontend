@@ -143,4 +143,6 @@ export interface CalificacionListParams {
   fechaDesde?: string
   /** `YYYY-MM-DD` (igual que en la URL), inclusive. */
   fechaHasta?: string
+  /** Búsqueda por contenido: estudiante, materia, docente, observación o nota. */
+  q?: string
 }

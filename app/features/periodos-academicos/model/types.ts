@@ -41,6 +41,8 @@ export interface PeriodoListParams {
   sortBy: CampoOrdenable
   order: 'asc' | 'desc'
   estado?: EstadoPeriodo
+  /** Búsqueda por contenido (nombre de la gestión). */
+  q?: string
 }
 
 /** Resultado de DELETE: 204 → eliminado; 200 → la API lo desactivó en lugar de borrarlo. */

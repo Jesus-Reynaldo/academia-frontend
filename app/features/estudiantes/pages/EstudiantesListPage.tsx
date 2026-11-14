@@ -156,7 +156,7 @@ export function EstudiantesListPage() {
             <SearchField
               key={busqueda.key}
               label="Buscar"
-              placeholder="Nombre, código o documento"
+              placeholder="Nombre, código, documento o email"
               delayMs={300}
               initialValue={busqueda.inicial}
               onSearch={(q) => updateParams({ q }, { replace: true })}

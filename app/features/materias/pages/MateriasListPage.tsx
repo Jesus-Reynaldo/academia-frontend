@@ -156,7 +156,8 @@ export function MateriasListPage() {
           >
             <SearchField
               key={busqueda.key}
-              label="Buscar por nombre"
+              label="Buscar"
+              placeholder="Nombre, código o descripción"
               initialValue={busqueda.inicial}
               onSearch={(nombre) => updateParams({ nombre }, { replace: true })}
             />

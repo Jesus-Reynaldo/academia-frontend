@@ -44,4 +44,6 @@ export interface InscripcionListParams {
   cursoId?: number
   periodoAcademicoId?: number
   estado?: EstadoInscripcion
+  /** Búsqueda por contenido: estudiante (nombre, código, documento), curso o gestión. */
+  q?: string
 }

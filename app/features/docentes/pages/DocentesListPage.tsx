@@ -150,7 +150,8 @@ export function DocentesListPage() {
         <CardContent sx={{ py: 1.5, '&:last-child': { pb: 1.5 } }}>
           <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.5} sx={{ alignItems: { sm: 'center' } }}>
             <TextField
-              label="Buscar por nombre"
+              label="Buscar"
+              placeholder="Nombre, código, email o teléfono"
               value={busqueda}
               onChange={(event) => setBusqueda(event.target.value)}
               sx={{ minWidth: { sm: 280 } }}

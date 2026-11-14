@@ -35,6 +35,7 @@ import {
   type Inscripcion,
   type InscripcionListParams,
 } from '../model/types'
+import { BuscadorUrl } from '../../../shared/ui/BuscadorUrl'
 
 const LIMITES = [10, 20, 50]
 
@@ -61,6 +62,7 @@ function leerParametros(searchParams: URLSearchParams): InscripcionListParams {
     cursoId: entero(searchParams.get('cursoId')),
     periodoAcademicoId: entero(searchParams.get('periodoAcademicoId')),
     estado: ESTADOS_INSCRIPCION.includes(estado as EstadoInscripcion) ? (estado as EstadoInscripcion) : undefined,
+    q: searchParams.get('q')?.trim() || undefined,
   }
 }
 
@@ -89,8 +91,9 @@ export function InscripcionesListPage({ modo }: InscripcionesListPageProps) {
     params.estudianteId !== undefined ||
     params.cursoId !== undefined ||
     params.periodoAcademicoId !== undefined ||
-    params.estado !== undefined
-  const limpiarFiltros = () => updateParams({ estudianteId: null, cursoId: null, periodoAcademicoId: null, estado: null })
+    params.estado !== undefined ||
+    params.q !== undefined
+  const limpiarFiltros = () => updateParams({ estudianteId: null, cursoId: null, periodoAcademicoId: null, estado: null, q: null })
   const total = query.data?.meta.total
   const titulo = modo === 'gestion' ? 'Inscripciones' : 'Mis inscripciones'
 
@@ -176,6 +179,9 @@ export function InscripcionesListPage({ modo }: InscripcionesListPageProps) {
 
       <Card sx={{ mb: 2 }}>
         <CardContent sx={{ py: 1.5, '&:last-child': { pb: 1.5 } }}>
+          <Box sx={{ mb: 1.5 }}>
+            <BuscadorUrl placeholder="Estudiante, código, documento, curso o gestión" />
+          </Box>
           <Box sx={{ display: 'grid', gap: 1.5, gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr', lg: 'repeat(4, 1fr)' } }}>
             {veOtrosEstudiantes && (
               <EstudianteSelect value={params.estudianteId ?? null} onChange={(id) => updateParams({ estudianteId: id })} />

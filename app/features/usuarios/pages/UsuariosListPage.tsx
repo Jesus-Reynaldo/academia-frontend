@@ -125,7 +125,7 @@ export function UsuariosListPage() {
             <SearchField
               key={busqueda.key}
               label="Buscar"
-              placeholder="Email de la cuenta"
+              placeholder="Email o nombre de la persona"
               delayMs={300}
               initialValue={busqueda.inicial}
               onSearch={(texto) => updateParams({ q: texto }, { replace: true })}
