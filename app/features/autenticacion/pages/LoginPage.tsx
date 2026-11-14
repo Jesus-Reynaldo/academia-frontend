@@ -64,7 +64,13 @@ export function LoginPage() {
   // Render (plan gratis) duerme el servidor sin visitas: al abrir el login se lo despierta y, si tarda, se avisa.
   const salud = useQuery({
     queryKey: ['salud'],
-    queryFn: ({ signal }) => apiFetch<{ estado: string }>('/salud', { signal, auth: false }),
+    // Cualquier respuesta del servidor (incluso 404 si su versión aún no tiene /salud) significa que está despierto;
+    // solo falla si no hay conexión.
+    queryFn: ({ signal }) =>
+      apiFetch<{ estado: string }>('/salud', { signal, auth: false }).catch((error: unknown) => {
+        if (error instanceof ApiError && error.status > 0) return { estado: 'despierto' }
+        throw error
+      }),
     retry: 6,
     retryDelay: 5000,
     staleTime: 60 * 1000,
