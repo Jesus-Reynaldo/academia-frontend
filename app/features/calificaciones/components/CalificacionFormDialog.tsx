@@ -13,7 +13,7 @@ import TextField from '@mui/material/TextField'
 import Typography from '@mui/material/Typography'
 import { useTheme } from '@mui/material/styles'
 import useMediaQuery from '@mui/material/useMediaQuery'
-import { useId, useMemo, useState, type ReactNode } from 'react'
+import { useEffect, useId, useMemo, useState, type ReactNode } from 'react'
 import { Controller, useForm, useWatch } from 'react-hook-form'
 import { ApiError, friendlyMessage } from '../../../shared/api/errors'
 import { useNotify } from '../../../shared/notifications/notifications-context'
@@ -21,6 +21,7 @@ import { colors } from '../../../shared/theme/tokens'
 import { GradeBadge } from '../../../shared/ui/GradeBadge'
 import { visuallyHidden } from '../../../shared/ui/visuallyHidden'
 import { useUsuario } from '../../autenticacion'
+import { useAsignacionesDelCurso } from '../../asignaciones-docentes'
 import { usePeriodosReferencia } from '../../periodos-academicos'
 import {
   useActualizarCalificacion,
@@ -146,10 +147,37 @@ export function CalificacionFormDialog({ calificacion, onClose }: CalificacionFo
   const guardando = isSubmitting || crear.isPending || actualizar.isPending
 
   // PASO 3: la lista de inscripciones se acota con el curso elegido; las materias, solo las activas.
-  const opcionesInscripcion = [...(inscripciones.data?.data ?? [])].sort((a, b) =>
+  // Asignaciones activas del curso elegido (para un docente, solo las suyas).
+  const asignaciones = useAsignacionesDelCurso(esEdicion ? null : cursoElegido)
+  const inscripcionElegida = useWatch({ control, name: 'inscripcionId' })
+  const materiaElegida = useWatch({ control, name: 'materiaId' })
+  const periodoElegido = inscripciones.data?.data.find((i) => i.id === inscripcionElegida)?.periodoAcademicoId
+  // Un docente solo ve a los estudiantes de las gestiones en que tiene asignado este curso.
+  const periodosDelDocente = new Set((asignaciones.data ?? []).map((a) => a.periodoAcademicoId))
+  const opcionesInscripcion = [...(inscripciones.data?.data ?? [])]
+    .filter((i) => esAdmin || periodosDelDocente.has(i.periodoAcademicoId))
+    .sort((a, b) =>
     `${a.estudiante.apellidos} ${a.estudiante.nombres}`.localeCompare(`${b.estudiante.apellidos} ${b.estudiante.nombres}`, 'es'),
   )
-  const materiasActivas = (materias.data ?? []).filter((materia) => materia.estado !== 'INACTIVA')
+  // Docente: solo las materias que tiene asignadas en este curso (y en la gestión del estudiante elegido).
+  const materiasAsignadas = new Set(
+    (asignaciones.data ?? [])
+      .filter((a) => periodoElegido === undefined || a.periodoAcademicoId === periodoElegido)
+      .map((a) => a.materiaId),
+  )
+  const materiasActivas = (materias.data ?? []).filter(
+    (materia) => materia.estado !== 'INACTIVA' && (esAdmin || materiasAsignadas.has(materia.id)),
+  )
+  // Admin: al elegir curso y materia se propone el docente asignado (se puede cambiar).
+  const docenteAsignado = esAdmin
+    ? (asignaciones.data ?? []).find(
+        (a) => a.materiaId === materiaElegida && (periodoElegido === undefined || a.periodoAcademicoId === periodoElegido),
+      )?.docenteId
+    : undefined
+  useEffect(() => {
+    if (docenteAsignado !== undefined) setValue('docenteId', docenteAsignado)
+  }, [docenteAsignado, setValue])
+  const sinAsignaciones = !esAdmin && !esEdicion && cursos.data !== undefined && cursos.data.length === 0
 
   // PASO 4: guardar. `registrarOtra` = true conserva curso, materia, tipo y fecha para la carga rápida.
   const guardar = async (values: CalificacionFormValues, registrarOtra: boolean) => {
@@ -232,6 +260,13 @@ export function CalificacionFormDialog({ calificacion, onClose }: CalificacionFo
               </Alert>
             )}
 
+            {sinAsignaciones && (
+              <Alert severity="info">
+                Aún no tienes materias asignadas. Pide al administrador que te asigne tus materias y cursos en
+                «Asignación docente».
+              </Alert>
+            )}
+
             {esEdicion ? (
               // Edición: la API no permite cambiar la inscripción ni la materia (solo PATCH de nota, tipo, fecha…).
               <Box
@@ -270,7 +305,11 @@ export function CalificacionFormDialog({ calificacion, onClose }: CalificacionFo
                       }}
                       slotProps={{ select: { displayEmpty: true }, inputLabel: { shrink: true } }}
                       required
-                      helperText="Primero elige el curso: se listan todos sus estudiantes. Se conserva al registrar otra."
+                      helperText={
+                        esAdmin
+                          ? 'Primero elige el curso: se listan todos sus estudiantes. Se conserva al registrar otra.'
+                          : 'Solo tus cursos asignados. Se conserva al registrar otra.'
+                      }
                     >
                       <MenuItem value="" disabled>
                         Elige un curso
@@ -320,7 +359,14 @@ export function CalificacionFormDialog({ calificacion, onClose }: CalificacionFo
                       onBlur={field.onBlur}
                       inputRef={field.ref}
                       error={Boolean(errors.materiaId)}
-                      helperText={errors.materiaId?.message}
+                      helperText={
+                        errors.materiaId?.message ??
+                        (esAdmin
+                          ? undefined
+                          : cursoElegido === null
+                            ? 'Elige primero el curso.'
+                            : 'Solo las materias que tienes asignadas en este curso.')
+                      }
                     >
                       {materiasActivas.map((materia) => (
                         <MenuItem key={materia.id} value={materia.id}>

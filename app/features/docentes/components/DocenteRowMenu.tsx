@@ -1,3 +1,4 @@
+import CoPresentOutlined from '@mui/icons-material/CoPresentOutlined'
 import EditOutlined from '@mui/icons-material/EditOutlined'
 import VisibilityOutlined from '@mui/icons-material/VisibilityOutlined'
 import { AccionesFila, type AccionFila } from '../../../shared/ui/AccionesFila'
@@ -26,6 +27,7 @@ export function DocenteRowMenu({ docente, onEdit }: DocenteRowMenuProps) {
   const acciones: AccionFila[] = [
     { etiqueta: 'Ver ficha', icono: <VisibilityOutlined />, to: `/docentes/${docente.id}` },
     { etiqueta: 'Editar', icono: <EditOutlined />, onClick: () => onEdit(docente) },
+    { etiqueta: 'Asignaciones', icono: <CoPresentOutlined />, to: `/asignaciones-docentes?docenteId=${docente.id}` },
   ]
   if (estado.accion) acciones.push(estado.accion)
   return (

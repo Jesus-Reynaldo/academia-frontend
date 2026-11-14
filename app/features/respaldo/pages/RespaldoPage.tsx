@@ -26,6 +26,7 @@ const TABLAS: Record<string, string> = {
   periodoAcademico: 'Períodos',
   inscripcion: 'Inscripciones',
   calificacion: 'Calificaciones',
+  asignacionDocente: 'Asignaciones docentes',
   bitacora: 'Registros de bitácora',
 }
 
