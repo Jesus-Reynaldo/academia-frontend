@@ -22,15 +22,16 @@ import { useTheme } from '@mui/material/styles'
 import MenuIcon from '@mui/icons-material/Menu'
 import Logout from '@mui/icons-material/Logout'
 import LockReset from '@mui/icons-material/LockReset'
-import SchoolRounded from '@mui/icons-material/SchoolRounded'
 import { useIsFetching } from '@tanstack/react-query'
 import { motion } from 'motion/react'
-import { Fragment, useState, type ReactNode } from 'react'
+import { Fragment, useEffect, useState, type ReactNode } from 'react'
 import { NavLink, useLocation, useNavigate } from 'react-router'
 import { ETIQUETA_ROL, type Rol } from '../config/roles'
 import { iniciales } from '../lib/format'
 import { colors, SIDEBAR_WIDTH } from '../theme/tokens'
 import type { NavItem } from './navigation'
+import { LogoInstitucion } from '../institucion/LogoInstitucion'
+import { useInstitucion } from '../institucion/useInstitucion'
 
 interface AppShellProps {
   items: NavItem[]
@@ -52,13 +53,23 @@ export function AppShell({ items, user, onLogout, children }: AppShellProps) {
   const [menuAnchor, setMenuAnchor] = useState<HTMLElement | null>(null)
 
   const closeMobile = () => setMobileOpen(false)
+  const institucion = useInstitucion()
+  // La pestaña del navegador lleva el nombre de la institución.
+  useEffect(() => {
+    document.title = institucion.nombre
+  }, [institucion.nombre])
 
   const nav = (
     <Box sx={{ bgcolor: colors.sidebar.bg, color: colors.sidebar.text, height: '100%' }}>
       <Toolbar sx={{ gap: 1.5 }}>
-        <SchoolRounded sx={{ color: '#fff' }} aria-hidden />
-        <Typography variant="h3" component="p" sx={{ color: '#fff', fontSize: '1.0625rem' }}>
-          Sistema Académico
+        <LogoInstitucion tamano={36} />
+        <Typography
+          variant="h3"
+          component="p"
+          title={institucion.nombre}
+          sx={{ color: '#fff', fontSize: '1rem', lineHeight: 1.25, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}
+        >
+          {institucion.sigla ?? institucion.nombre}
         </Typography>
       </Toolbar>
       <Divider sx={{ borderColor: 'rgba(255,255,255,0.12)' }} />

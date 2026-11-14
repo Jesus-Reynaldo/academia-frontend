@@ -42,8 +42,8 @@ export function RespaldoPage() {
   })
 
   const descargar = useMutation({
-    mutationFn: () => apiDescargar('/respaldo', 'respaldo-academico.json.gz'),
-    onSuccess: (nombre) => notify(`Respaldo descargado: ${nombre}`),
+    mutationFn: () => apiDescargar('/respaldo', 'backup-academico.json.gz'),
+    onSuccess: (nombre) => notify(`Backup descargado: ${nombre}`),
   })
 
   const entrada = useRef<HTMLInputElement>(null)
@@ -55,7 +55,7 @@ export function RespaldoPage() {
     mutationFn: async (elegido: File) => {
       // Primero se guarda el estado actual: si el archivo elegido no era el correcto, se puede volver atrás.
       const marca = new Date().toISOString().slice(0, 19).replace(/[-:]/g, '').replace('T', '-')
-      await apiDescargar('/respaldo', '', `respaldo-antes-de-restaurar-${marca}.json.gz`)
+      await apiDescargar('/respaldo', '', `backup-antes-de-restaurar-${marca}.json.gz`)
       const datos = new FormData()
       datos.append('archivo', elegido)
       return apiSubir<{ generado: string; conteos: Record<string, number> }>('/respaldo/restaurar', datos)
@@ -67,7 +67,7 @@ export function RespaldoPage() {
       if (entrada.current) entrada.current.value = ''
       // Todo cambió: se vuelve a pedir cada pantalla.
       void queryClient.invalidateQueries()
-      notify(`Información restaurada al respaldo del ${new Date(r.generado).toLocaleString('es-BO')}`)
+      notify(`Información restaurada al backup del ${new Date(r.generado).toLocaleString('es-BO')}`)
     },
   })
 
@@ -75,13 +75,13 @@ export function RespaldoPage() {
 
   return (
     <>
-      <PageHeader modulo="respaldo" title="Respaldo" subtitle="Copia de seguridad de toda la información del sistema" />
+      <PageHeader modulo="respaldo" title="Backup" subtitle="Copia de seguridad (backup) de toda la información del sistema" />
 
       <Grid container spacing={2}>
         <Grid size={{ xs: 12, md: 6 }}>
-          <SectionCard title="Descargar respaldo" modulo="respaldo">
+          <SectionCard title="Descargar backup" modulo="respaldo">
             <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-              Descarga un archivo con todos los datos. Guárdalo en un lugar seguro (incluye las cuentas de acceso).
+              Descarga un backup con todos los datos. Guárdalo en un lugar seguro (incluye las cuentas de acceso).
               Recomendado: uno por semana y antes de cambios grandes.
             </Typography>
             {resumen.isPending ? (
@@ -105,17 +105,17 @@ export function RespaldoPage() {
               onClick={() => descargar.mutate()}
               sx={{ minHeight: 44 }}
             >
-              {descargar.isPending ? 'Preparando…' : `Descargar respaldo${total ? ` (${numero.format(total)} registros)` : ''}`}
+              {descargar.isPending ? 'Preparando…' : `Descargar backup${total ? ` (${numero.format(total)} registros)` : ''}`}
             </Button>
             {descargar.isError && <Alert severity="error" sx={{ mt: 2 }}>{friendlyMessage(descargar.error)}</Alert>}
           </SectionCard>
         </Grid>
 
         <Grid size={{ xs: 12, md: 6 }}>
-          <SectionCard title="Restaurar información">
+          <SectionCard title="Restaurar desde un backup">
             <Alert severity="warning" sx={{ mb: 2 }}>
               Restaurar <strong>reemplaza toda la información actual</strong> por la del archivo. Antes de hacerlo se
-              descarga sola una copia del estado actual, por si necesitas volver atrás.
+              descarga solo un backup del estado actual, por si necesitas volver atrás.
             </Alert>
             <input
               ref={entrada}
@@ -144,7 +144,7 @@ export function RespaldoPage() {
               onClick={() => setConfirmando(true)}
               sx={{ minHeight: 44, mt: 2 }}
             >
-              Restaurar desde este archivo
+              Restaurar este backup
             </Button>
           </SectionCard>
         </Grid>
@@ -152,8 +152,8 @@ export function RespaldoPage() {
 
       <ConfirmDialog
         open={confirmando}
-        title="¿Restaurar toda la información?"
-        description={`Se reemplazarán TODOS los datos actuales por los de «${archivo?.name ?? ''}». Primero se descargará una copia del estado actual. Si el archivo trae datos inválidos no se cambia nada.`}
+        title="¿Restaurar este backup?"
+        description={`Se reemplazarán TODOS los datos actuales por los de «${archivo?.name ?? ''}». Primero se descargará un backup del estado actual. Si el archivo trae datos inválidos no se cambia nada.`}
         confirmLabel={restaurar.isPending ? 'Restaurando…' : 'Restaurar'}
         loading={restaurar.isPending}
         hideConfirm={texto.trim().toUpperCase() !== 'CONFIRMAR'}

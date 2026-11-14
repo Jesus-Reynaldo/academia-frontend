@@ -186,7 +186,7 @@ function Entrada({ registro: r }: { registro: RegistroBitacora }) {
         <Typography variant="body2" sx={{ overflowWrap: 'anywhere' }}>
           <strong>{quien}</strong>
           {r.usuario && <span className="text-texto-suave"> ({ETIQUETA_ROL[r.usuario.rol]})</span>}{' '}
-          {ETIQUETA_ACCION[r.accion].toLowerCase()} {recurso.etiqueta === 'inscripción' || recurso.etiqueta === 'materia' || recurso.etiqueta === 'calificación' ? 'la' : 'el'} {recurso.etiqueta}{' '}
+          {ETIQUETA_ACCION[r.accion].toLowerCase()} {recurso.articulo} {recurso.etiqueta}{' '}
           {enlace ? (
             <Link component={RouterLink} to={enlace} underline="always">
               «{legible(r.descripcion)}»
