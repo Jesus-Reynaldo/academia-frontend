@@ -7,6 +7,7 @@ import GradeOutlined from '@mui/icons-material/GradeOutlined'
 import HistoryEduOutlined from '@mui/icons-material/HistoryEduOutlined'
 import HomeOutlined from '@mui/icons-material/HomeOutlined'
 import ManageAccountsOutlined from '@mui/icons-material/ManageAccountsOutlined'
+import ManageHistoryOutlined from '@mui/icons-material/ManageHistoryOutlined'
 import MenuBookOutlined from '@mui/icons-material/MenuBookOutlined'
 import SchoolOutlined from '@mui/icons-material/SchoolOutlined'
 import type { SvgIconComponent } from '@mui/icons-material'
@@ -23,6 +24,7 @@ export type Modulo =
   | 'calificaciones'
   | 'historial'
   | 'cuenta'
+  | 'bitacora'
 
 /**
  * Un solo ícono por módulo en TODO el sistema: menú lateral, barra inferior, encabezados de página,
@@ -40,4 +42,5 @@ export const ICONO_MODULO: Record<Modulo, SvgIconComponent> = {
   calificaciones: GradeOutlined,
   historial: HistoryEduOutlined,
   cuenta: AccountCircleOutlined,
+  bitacora: ManageHistoryOutlined,
 }

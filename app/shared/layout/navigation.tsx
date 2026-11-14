@@ -29,6 +29,7 @@ export function navigationFor(rol: Rol): NavItem[] {
         item('Períodos', '/periodos-academicos', 'periodos', 'Académico'),
         item('Inscripciones', '/inscripciones', 'inscripciones', 'Gestión'),
         item('Calificaciones', '/calificaciones', 'calificaciones', 'Gestión'),
+        item('Bitácora', '/bitacora', 'bitacora', 'Gestión'),
       ]
     case 'DOCENTE':
       return [
