@@ -1,4 +1,5 @@
 import EditOutlined from '@mui/icons-material/EditOutlined'
+import ScheduleOutlined from '@mui/icons-material/ScheduleOutlined'
 import VisibilityOutlined from '@mui/icons-material/VisibilityOutlined'
 import { AccionesFila, type AccionFila } from '../../../shared/ui/AccionesFila'
 import { useCambioEstado } from '../../../shared/ui/useCambioEstado'
@@ -26,6 +27,7 @@ export function CursoRowMenu({ curso, onEdit }: CursoRowMenuProps) {
   const acciones: AccionFila[] = [
     { etiqueta: 'Ver detalle', icono: <VisibilityOutlined />, to: `/cursos/${curso.id}` },
     { etiqueta: 'Editar', icono: <EditOutlined />, onClick: () => onEdit(curso) },
+    { etiqueta: 'Horario', icono: <ScheduleOutlined />, to: `/horarios?cursoId=${curso.id}` },
   ]
   if (estado.accion) acciones.push(estado.accion)
   return (
