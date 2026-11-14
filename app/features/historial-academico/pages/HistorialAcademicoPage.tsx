@@ -1,7 +1,6 @@
 import CheckCircleOutlined from '@mui/icons-material/CheckCircleOutlined'
 import ErrorOutlined from '@mui/icons-material/ErrorOutlined'
 import ExpandMore from '@mui/icons-material/ExpandMore'
-import PrintOutlined from '@mui/icons-material/PrintOutlined'
 import Accordion from '@mui/material/Accordion'
 import AccordionDetails from '@mui/material/AccordionDetails'
 import AccordionSummary from '@mui/material/AccordionSummary'
@@ -153,12 +152,9 @@ function HistorialContenido({ historial, showTitle }: { historial: HistorialAcad
   const fechaEmision = new Intl.DateTimeFormat('es', { day: '2-digit', month: '2-digit', year: 'numeric' }).format(new Date())
   const periodoSeleccionado = periodos.find((periodo) => periodo.periodoId === periodoActivo) ?? periodos.at(-1)
 
-  const botonImprimir = (
+  const botonLibreta = (
     <Box className="no-print" sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
       <BotonPdf etiqueta="Libreta en PDF" variante="contained" generar={() => descargarLibreta(historial)} />
-      <Button variant="outlined" startIcon={<PrintOutlined />} onClick={() => window.print()} sx={{ minHeight: 44 }}>
-        Imprimir
-      </Button>
     </Box>
   )
 
@@ -178,10 +174,10 @@ function HistorialContenido({ historial, showTitle }: { historial: HistorialAcad
       {showTitle ? (
         // En la hoja impresa el título lo da el encabezado «Libreta académica».
         <Box className="no-print">
-          <PageHeader title="Historial académico" modulo="historial" actions={botonImprimir} />
+          <PageHeader title="Historial académico" modulo="historial" actions={botonLibreta} />
         </Box>
       ) : (
-        <Box sx={{ display: 'flex', justifyContent: 'flex-end', mb: 1 }}>{botonImprimir}</Box>
+        <Box sx={{ display: 'flex', justifyContent: 'flex-end', mb: 1 }}>{botonLibreta}</Box>
       )}
 
       <Card sx={{ mb: 2 }} className="no-print">
