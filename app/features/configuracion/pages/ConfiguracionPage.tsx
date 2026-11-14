@@ -17,6 +17,7 @@ import { institucionKey, useInstitucion, type Institucion } from '../../../share
 import { useNotify } from '../../../shared/notifications/notifications-context'
 import { PageHeader } from '../../../shared/ui/PageHeader'
 import { SectionCard } from '../../../shared/ui/SectionCard'
+import { Despertador } from '../components/Despertador'
 
 const TIPOS = ['image/png', 'image/jpeg', 'image/webp']
 const MAXIMO = 1024 * 1024
@@ -126,6 +127,9 @@ export function ConfiguracionPage() {
               )}
             </div>
           </SectionCard>
+        </Grid>
+        <Grid size={12}>
+          <Despertador />
         </Grid>
       </Grid>
     </>

@@ -13,11 +13,13 @@ import Typography from '@mui/material/Typography'
 import Visibility from '@mui/icons-material/Visibility'
 import VisibilityOff from '@mui/icons-material/VisibilityOff'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { useState } from 'react'
+import { useQuery } from '@tanstack/react-query'
+import { useEffect, useState } from 'react'
 import { Controller, useForm } from 'react-hook-form'
 import { Navigate, useLocation, useNavigate } from 'react-router'
 import { z } from 'zod'
 import { ApiError } from '../../../shared/api/errors'
+import { apiFetch } from '../../../shared/api/http'
 import { LogoInstitucion } from '../../../shared/institucion/LogoInstitucion'
 import { useInstitucion } from '../../../shared/institucion/useInstitucion'
 import { useAuth } from '../context/auth-context'
@@ -58,6 +60,21 @@ export function LoginPage() {
   const state = (location.state ?? {}) as LocationState
   const [showPassword, setShowPassword] = useState(false)
   const institucion = useInstitucion()
+
+  // Render (plan gratis) duerme el servidor sin visitas: al abrir el login se lo despierta y, si tarda, se avisa.
+  const salud = useQuery({
+    queryKey: ['salud'],
+    queryFn: ({ signal }) => apiFetch<{ estado: string }>('/salud', { signal, auth: false }),
+    retry: 6,
+    retryDelay: 5000,
+    staleTime: 60 * 1000,
+  })
+  const [lento, setLento] = useState(false)
+  useEffect(() => {
+    if (!salud.isPending) return
+    const t = setTimeout(() => setLento(true), 1500)
+    return () => clearTimeout(t)
+  }, [salud.isPending])
   const [serverError, setServerError] = useState<string | null>(null)
 
   const {
@@ -116,6 +133,16 @@ export function LoginPage() {
             </Typography>
           </Stack>
 
+          {salud.isPending && lento && (
+            <Alert severity="info" icon={<CircularProgress size={20} />} sx={{ mb: 2 }} role="status">
+              Despertando el servidor… la primera vez puede tardar hasta un minuto.
+            </Alert>
+          )}
+          {salud.isError && (
+            <Alert severity="warning" sx={{ mb: 2 }}>
+              No se pudo contactar al servidor. Revisa tu conexión y vuelve a cargar la página.
+            </Alert>
+          )}
           {state.expired && !serverError && (
             <Alert severity="info" sx={{ mb: 2 }}>
               Tu sesión expiró. Vuelve a ingresar.
