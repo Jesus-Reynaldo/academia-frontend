@@ -1,5 +1,5 @@
 import { useCallback } from 'react'
-import { useSearchParams } from 'react-router'
+import { useLocation, useSearchParams } from 'react-router'
 
 type ParamValue = string | number | null | undefined
 
@@ -17,6 +17,8 @@ interface UpdateOptions {
  */
 export function useUrlParams() {
   const [searchParams, setSearchParams] = useSearchParams()
+  // Se conserva el estado de la navegación (p. ej. «desde» para la flecha de volver) al cambiar la URL.
+  const { state } = useLocation()
 
   const update = useCallback(
     (changes: Record<string, ParamValue>, options: UpdateOptions = {}) => {
@@ -30,10 +32,10 @@ export function useUrlParams() {
           if (!('page' in changes)) next.delete('page')
           return next
         },
-        { replace: options.replace ?? false },
+        { replace: options.replace ?? false, state },
       )
     },
-    [setSearchParams],
+    [setSearchParams, state],
   )
 
   return [searchParams, update] as const

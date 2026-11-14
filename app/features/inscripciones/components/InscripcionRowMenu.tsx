@@ -2,7 +2,9 @@ import PersonRemoveOutlined from '@mui/icons-material/PersonRemoveOutlined'
 import ReplayOutlined from '@mui/icons-material/ReplayOutlined'
 import TaskAltOutlined from '@mui/icons-material/TaskAltOutlined'
 import type { ReactElement } from 'react'
+import DescriptionOutlined from '@mui/icons-material/DescriptionOutlined'
 import { AccionesFila } from '../../../shared/ui/AccionesFila'
+import { descargarConstancia } from '../reportes/constanciaPdf'
 import { ESTADOS_INSCRIPCION, ETIQUETA_ESTADO_INSCRIPCION, type EstadoInscripcion, type Inscripcion } from '../model/types'
 
 interface InscripcionRowMenuProps {
@@ -26,6 +28,7 @@ export function InscripcionRowMenu({ inscripcion, onCambiarEstado }: Inscripcion
     <AccionesFila
       sujeto={`la inscripción de ${nombres} ${apellidos}`}
       acciones={[
+        { etiqueta: 'Constancia', icono: <DescriptionOutlined />, onClick: () => void descargarConstancia(inscripcion) },
         ...ESTADOS_INSCRIPCION.filter((estado) => estado !== inscripcion.estado).map((estado) => ({
           etiqueta: `Marcar como ${ETIQUETA_ESTADO_INSCRIPCION[estado]}`,
           icono: ICONO_ESTADO[estado],

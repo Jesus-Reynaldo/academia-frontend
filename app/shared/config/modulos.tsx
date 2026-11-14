@@ -3,6 +3,7 @@ import AssignmentIndOutlined from '@mui/icons-material/AssignmentIndOutlined'
 import BackupOutlined from '@mui/icons-material/BackupOutlined'
 import BadgeOutlined from '@mui/icons-material/BadgeOutlined'
 import ClassOutlined from '@mui/icons-material/ClassOutlined'
+import CoPresentOutlined from '@mui/icons-material/CoPresentOutlined'
 import EventNoteOutlined from '@mui/icons-material/EventNoteOutlined'
 import GradeOutlined from '@mui/icons-material/GradeOutlined'
 import HistoryEduOutlined from '@mui/icons-material/HistoryEduOutlined'
@@ -24,6 +25,7 @@ export type Modulo =
   | 'periodos'
   | 'inscripciones'
   | 'calificaciones'
+  | 'asignaciones'
   | 'historial'
   | 'cuenta'
   | 'bitacora'
@@ -44,6 +46,7 @@ export const ICONO_MODULO: Record<Modulo, SvgIconComponent> = {
   periodos: EventNoteOutlined,
   inscripciones: AssignmentIndOutlined,
   calificaciones: GradeOutlined,
+  asignaciones: CoPresentOutlined,
   historial: HistoryEduOutlined,
   cuenta: AccountCircleOutlined,
   bitacora: ManageHistoryOutlined,

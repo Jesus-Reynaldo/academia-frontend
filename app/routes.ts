@@ -21,6 +21,7 @@ export default [
     route('periodos-academicos', 'routes/periodos-academicos.tsx'),
     route('inscripciones', 'routes/inscripciones.tsx'),
     route('calificaciones', 'routes/calificaciones.tsx'),
+    route('asignaciones-docentes', 'routes/asignaciones-docentes.tsx'),
     route('usuarios', 'routes/usuarios.tsx'),
     route('bitacora', 'routes/bitacora.tsx'),
     route('backup', 'routes/respaldo.tsx'),

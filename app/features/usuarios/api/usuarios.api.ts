@@ -14,16 +14,15 @@ async function todasOrdenadas(params: Omit<UsuarioListParams, 'q'>, texto: strin
   const todas: CuentaUsuario[] = []
   for (let page = 1; ; page++) {
     const respuesta = await apiFetch<Paginated<CuentaUsuario>>(BASE, {
-      query: { ...params, page, limit: POR_PAGINA_API },
+      // El servidor ya filtra por email y por el nombre de la persona vinculada (q).
+      query: { ...params, q: texto || undefined, page, limit: POR_PAGINA_API },
       signal,
     })
     todas.push(...respuesta.data)
     if (page >= respuesta.meta.totalPages) break
   }
-  const buscado = texto.toLowerCase()
   // Activas primero y desactivadas al final; dentro de cada grupo se respeta el orden de la API.
   const coinciden = todas
-    .filter((cuenta) => cuenta.email.toLowerCase().includes(buscado))
     .sort((a, b) => Number(b.activo) - Number(a.activo))
   const inicio = (params.page - 1) * params.limit
   return {

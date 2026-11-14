@@ -39,19 +39,15 @@ function obligatorio(texto: string): ReactNode {
 }
 
 /**
- * Busca qué dato está repetido, porque el servidor no lo indica al rechazar un código o documento duplicado.
- * Si la consulta falla devuelve vacío y el formulario muestra el error general.
+ * ¿El documento ya es de otro estudiante? Al editar, el servidor no lo indica al rechazarlo.
+ * Si la consulta falla devuelve false y el formulario muestra el error general.
  */
-async function camposDuplicados(values: EstudianteFormValues, idActual: number | undefined) {
-  const buscar = (texto: string) => estudiantesApi.list({ q: texto, page: 1, limit: 100 })
+async function documentoRepetido(values: EstudianteFormValues, idActual: number | undefined) {
   try {
-    const [porCodigo, porDocumento] = await Promise.all([buscar(values.codigo.trim()), buscar(values.documento.trim())])
-    return {
-      codigo: porCodigo.data.some((e) => e.codigo === values.codigo.trim() && e.id !== idActual),
-      documento: porDocumento.data.some((e) => e.documento === values.documento.trim() && e.id !== idActual),
-    }
+    const encontrados = await estudiantesApi.list({ q: values.documento.trim(), page: 1, limit: 100 })
+    return encontrados.data.some((e) => e.documento === values.documento.trim() && e.id !== idActual)
   } catch {
-    return { codigo: false, documento: false }
+    return false
   }
 }
 
@@ -73,7 +69,6 @@ export function EstudianteFormDialog({ estudiante, onClose }: EstudianteFormDial
     resolver: zodResolver(estudianteSchema),
     mode: 'onBlur', // valida al salir del campo y al enviar, no mientras se escribe por primera vez
     defaultValues: {
-      codigo: estudiante?.codigo ?? '',
       documento: estudiante?.documento ?? '',
       nombres: estudiante?.nombres ?? '',
       apellidos: estudiante?.apellidos ?? '',
@@ -95,8 +90,8 @@ export function EstudianteFormDialog({ estudiante, onClose }: EstudianteFormDial
     }
     // Campos opcionales vacíos: al crear no se envían; al editar se envía null para borrar el valor guardado.
     const vacio = estudiante ? null : undefined
+    // El código no se envía: lo asigna el servidor al crear y no cambia al editar.
     const input: EstudianteInput = {
-      codigo: values.codigo.trim(),
       documento: values.documento.trim(),
       nombres: values.nombres.trim(),
       apellidos: values.apellidos.trim(),
@@ -111,8 +106,8 @@ export function EstudianteFormDialog({ estudiante, onClose }: EstudianteFormDial
         await actualizar.mutateAsync({ id: estudiante.id, input })
         notify(`Se guardaron los cambios de «${nombre}».`)
       } else {
-        await crear.mutateAsync(input)
-        notify(`Se registró a «${nombre}».`)
+        const creado = await crear.mutateAsync(input)
+        notify(`Se registró a «${nombre}» con el código ${creado.codigo}.`)
       }
       onClose()
     } catch (error) {
@@ -120,12 +115,12 @@ export function EstudianteFormDialog({ estudiante, onClose }: EstudianteFormDial
         setServerErrors(error.messages)
         return
       }
-      // El backend responde 500 (no 409) cuando el código o el documento ya existen.
+      // Al crear, el servidor responde 409 si el documento ya existe; al editar, 500.
       if (error instanceof ApiError && (error.status === 409 || error.status >= 500)) {
-        const duplicados = await camposDuplicados(values, estudiante?.id)
-        if (duplicados.codigo) setError('codigo', { message: 'Ya existe un estudiante con este código' }, { shouldFocus: true })
-        if (duplicados.documento) setError('documento', { message: 'Ya existe un estudiante con este documento' }, { shouldFocus: !duplicados.codigo })
-        if (duplicados.codigo || duplicados.documento) return
+        if (await documentoRepetido(values, estudiante?.id)) {
+          setError('documento', { message: 'Ya existe un estudiante con este documento' }, { shouldFocus: true })
+          return
+        }
       }
       setServerErrors([friendlyMessage(error)])
     }
@@ -161,21 +156,20 @@ export function EstudianteFormDialog({ estudiante, onClose }: EstudianteFormDial
             )}
 
             <Box sx={fila}>
+              {/* El código lo asigna el servidor (así no se repite aunque varias personas inscriban a la vez). */}
               <TextField
-                label={obligatorio('Código')}
-                required
+                label="Código"
                 fullWidth
-                autoFocus
-                autoComplete="off"
-                placeholder="EST-0201"
-                error={Boolean(errors.codigo)}
-                helperText={errors.codigo?.message}
-                {...register('codigo')}
+                value={estudiante?.codigo ?? 'Se asigna al guardar'}
+                helperText={estudiante ? 'No se puede cambiar.' : 'Automático: el siguiente libre (EST-0201…).'}
+                slotProps={{ htmlInput: { readOnly: true, 'aria-readonly': true }, inputLabel: { shrink: true } }}
+                sx={{ '& .MuiInputBase-input': { color: 'text.secondary', fontWeight: estudiante ? 600 : 400 } }}
               />
               <TextField
                 label={obligatorio('Documento')}
                 required
                 fullWidth
+                autoFocus
                 autoComplete="off"
                 placeholder="1234567 CH"
                 error={Boolean(errors.documento)}

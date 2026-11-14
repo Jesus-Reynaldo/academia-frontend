@@ -1,7 +1,6 @@
 import CheckCircleOutlined from '@mui/icons-material/CheckCircleOutlined'
 import ErrorOutlined from '@mui/icons-material/ErrorOutlined'
 import ExpandMore from '@mui/icons-material/ExpandMore'
-import PrintOutlined from '@mui/icons-material/PrintOutlined'
 import Accordion from '@mui/material/Accordion'
 import AccordionDetails from '@mui/material/AccordionDetails'
 import AccordionSummary from '@mui/material/AccordionSummary'
@@ -16,7 +15,7 @@ import Stack from '@mui/material/Stack'
 import Tab from '@mui/material/Tab'
 import Tabs from '@mui/material/Tabs'
 import Typography from '@mui/material/Typography'
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { ApiError } from '../../../shared/api/errors'
 import { formatNota } from '../../../shared/lib/format'
 import { EmptyState } from '../../../shared/ui/EmptyState'
@@ -29,45 +28,24 @@ import { TarjetasCurso } from '../components/TarjetasCurso'
 import { agruparPeriodos } from '../model/agrupar'
 import { resumenPeriodo } from '../model/desglose'
 import type { HistorialAcademico, HistorialCurso, HistorialPeriodo } from '../model/types'
+import { BotonPdf } from '../../../shared/ui/BotonPdf'
+import { descargarLibreta } from '../reportes/libretaPdf'
+import { useNotify } from '../../../shared/notifications/notifications-context'
 
 interface HistorialAcademicoPageProps {
   estudianteId: number | null
   showTitle?: boolean
 }
 
-/** Estilos de la libreta impresa: A4 vertical, todas las columnas visibles y sin hojas vacías. */
+/**
+ * La libreta oficial es el PDF (botón «Libreta en PDF» o Ctrl+P). Si alguien imprime desde el menú del navegador,
+ * la hoja solo muestra cómo obtenerla, en vez de una copia de la pantalla.
+ */
 const ESTILOS_IMPRESION = `
   @media print {
-    @page {
-      size: A4 portrait;
-      margin: 14mm 12mm;
-      @bottom-right { content: "Página " counter(page) " de " counter(pages); font-size: 9pt; }
-    }
-    .historial-academico .no-print,
-    .historial-academico .MuiTabs-root,
-    .historial-academico .MuiAccordionSummary-expandIconWrapper { display: none !important; }
-    .historial-academico .solo-print { display: block !important; }
-    .historial-academico, .historial-academico * {
-      color: #000 !important;
-      box-shadow: none !important;
-      text-shadow: none !important;
-    }
-    .historial-academico .MuiCard-root,
-    .historial-academico .MuiAccordion-root {
-      background: #fff !important;
-      border: 1px solid #777 !important;
-    }
-    .historial-academico .MuiAccordion-root { margin: 0 0 8px !important; }
-    .historial-academico .MuiCollapse-root { height: auto !important; visibility: visible !important; }
-    .historial-academico .MuiAccordionDetails-root { display: block !important; padding: 4px 8px 8px !important; }
-    .historial-academico .MuiAccordionSummary-root { display: block !important; min-height: auto !important; }
-    .historial-academico .MuiAccordionSummary-content { margin: 6px 0 !important; }
-    .historial-academico .historial-tabla { display: block !important; overflow: visible !important; }
-    .historial-academico .historial-tabla table { min-width: 0 !important; width: 100% !important; }
-    .historial-academico .historial-tabla th,
-    .historial-academico .historial-tabla td { padding: 3px 5px !important; font-size: 9pt !important; }
-    .historial-academico tr { break-inside: avoid; }
-    .historial-academico h3 { break-after: avoid; }
+    body * { visibility: hidden !important; }
+    .aviso-impresion, .aviso-impresion * { visibility: visible !important; }
+    .aviso-impresion { display: block !important; position: fixed; inset: 0 0 auto 0; padding: 24px; font-size: 14pt; }
   }
 `
 
@@ -151,38 +129,43 @@ function HistorialContenido({ historial, showTitle }: { historial: HistorialAcad
   const fechaEmision = new Intl.DateTimeFormat('es', { day: '2-digit', month: '2-digit', year: 'numeric' }).format(new Date())
   const periodoSeleccionado = periodos.find((periodo) => periodo.periodoId === periodoActivo) ?? periodos.at(-1)
 
-  const botonImprimir = (
-    <Button
-      className="no-print"
-      variant="outlined"
-      startIcon={<PrintOutlined />}
-      onClick={() => window.print()}
-      sx={{ minHeight: 44 }}
-    >
-      Imprimir libreta
-    </Button>
+  const notify = useNotify()
+  // Ctrl+P (o Cmd+P) en el historial descarga la libreta en PDF en lugar de imprimir la pantalla.
+  useEffect(() => {
+    const alPresionar = (evento: KeyboardEvent) => {
+      if ((evento.ctrlKey || evento.metaKey) && evento.key.toLowerCase() === 'p') {
+        evento.preventDefault()
+        descargarLibreta(historial).then(
+          () => notify('Libreta generada.'),
+          () => notify('No se pudo generar la libreta.', 'error'),
+        )
+      }
+    }
+    window.addEventListener('keydown', alPresionar)
+    return () => window.removeEventListener('keydown', alPresionar)
+  }, [historial, notify])
+
+  const botonLibreta = (
+    <Box className="no-print" sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
+      <BotonPdf etiqueta="Libreta en PDF" variante="contained" generar={() => descargarLibreta(historial)} />
+    </Box>
   )
 
   return (
     <Box className="historial-academico">
       <style>{ESTILOS_IMPRESION}</style>
 
-      {/* Encabezado que solo aparece en la hoja impresa. */}
-      <Box className="solo-print" sx={{ display: 'none', mb: 1 }}>
-        <Typography sx={{ fontSize: '14pt', fontWeight: 700 }}>Libreta académica</Typography>
-        <Typography sx={{ fontSize: '10pt' }}>
-          {historial.estudiante.nombre} · Código {historial.estudiante.codigo} · Emitido el {fechaEmision}
-        </Typography>
-        <Typography sx={{ fontSize: '9pt' }}>Las notas marcadas con (!) están por debajo de 51.</Typography>
-      </Box>
+      <div className="aviso-impresion" style={{ display: 'none' }}>
+        Para imprimir la libreta académica usa el botón «Libreta en PDF» (o Ctrl+P en esta pantalla).
+      </div>
 
       {showTitle ? (
         // En la hoja impresa el título lo da el encabezado «Libreta académica».
         <Box className="no-print">
-          <PageHeader title="Historial académico" modulo="historial" actions={botonImprimir} />
+          <PageHeader title="Historial académico" modulo="historial" actions={botonLibreta} />
         </Box>
       ) : (
-        <Box sx={{ display: 'flex', justifyContent: 'flex-end', mb: 1 }}>{botonImprimir}</Box>
+        <Box sx={{ display: 'flex', justifyContent: 'flex-end', mb: 1 }}>{botonLibreta}</Box>
       )}
 
       <Card sx={{ mb: 2 }} className="no-print">
@@ -255,22 +238,6 @@ function HistorialContenido({ historial, showTitle }: { historial: HistorialAcad
                 <PeriodoHistorial periodo={periodoSeleccionado} panelId={`periodo-panel-${periodoSeleccionado.periodoId}`} />
               </Box>
             )}
-            {/* Impresión: todas las gestiones, de la más reciente a la más antigua. */}
-            <Box className="solo-print" sx={{ display: 'none' }}>
-              {[...periodos].reverse().map((periodo) => (
-                <Box key={periodo.periodoId} sx={{ mb: 2 }}>
-                  <Typography variant="h3" component="h3" sx={{ mb: 0.5, fontSize: '12pt' }}>
-                    {periodo.periodo}
-                  </Typography>
-                  <ResumenGestion periodo={periodo} />
-                  <Stack spacing={1}>
-                    {periodo.cursos.map((curso) => (
-                      <CursoHistorial key={`${periodo.periodoId}-${curso.cursoId}`} curso={curso} abierto />
-                    ))}
-                  </Stack>
-                </Box>
-              ))}
-            </Box>
           </CardContent>
         </Card>
       )}

@@ -12,8 +12,9 @@ import type {
 const BASE = '/docentes'
 
 export const docentesApi = {
-  list: (params: Partial<DocenteListParams>, signal?: AbortSignal) =>
-    apiFetch<Paginated<Docente>>(BASE, { query: params, signal }),
+  // El texto del buscador viaja como «q»: el servidor lo busca palabra por palabra en todas las columnas visibles.
+  list: ({ nombre, ...params }: Partial<DocenteListParams>, signal?: AbortSignal) =>
+    apiFetch<Paginated<Docente>>(BASE, { query: { ...params, q: nombre }, signal }),
 
   get: (id: number, signal?: AbortSignal) => apiFetch<Docente>(`${BASE}/${id}`, { signal }),
 

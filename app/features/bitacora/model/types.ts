@@ -21,10 +21,11 @@ export type RecursoBitacora =
   | 'periodos-academicos'
   | 'inscripciones'
   | 'calificaciones'
+  | 'asignaciones-docentes'
   | 'configuracion'
 
 export const RECURSOS: readonly RecursoBitacora[] = [
-  'estudiantes', 'docentes', 'usuarios', 'cursos', 'materias', 'periodos-academicos', 'inscripciones', 'calificaciones', 'configuracion',
+  'estudiantes', 'docentes', 'usuarios', 'cursos', 'materias', 'periodos-academicos', 'inscripciones', 'calificaciones', 'asignaciones-docentes', 'configuracion',
 ]
 
 /** Nombre en singular y módulo (para el ícono, el mismo del menú). */
@@ -37,6 +38,7 @@ export const RECURSO: Record<RecursoBitacora, { etiqueta: string; articulo: 'el'
   'periodos-academicos': { etiqueta: 'período', articulo: 'el', plural: 'Períodos', modulo: 'periodos' },
   inscripciones: { etiqueta: 'inscripción', articulo: 'la', plural: 'Inscripciones', modulo: 'inscripciones' },
   calificaciones: { etiqueta: 'calificación', articulo: 'la', plural: 'Calificaciones', modulo: 'calificaciones' },
+  'asignaciones-docentes': { etiqueta: 'asignación docente', articulo: 'la', plural: 'Asignación docente', modulo: 'asignaciones' },
   configuracion: { etiqueta: 'configuración', articulo: 'la', plural: 'Configuración', modulo: 'configuracion', ruta: undefined },
 }
 
@@ -56,5 +58,7 @@ export interface BitacoraParams {
   page: number
   limit: number
   recurso?: RecursoBitacora
+  /** Búsqueda por contenido: descripción, módulo o email de quien lo hizo. */
+  q?: string
   accion?: AccionBitacora
 }

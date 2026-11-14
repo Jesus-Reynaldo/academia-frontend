@@ -28,7 +28,8 @@ export interface Estudiante {
 
 /** Cuerpo de POST y PATCH. `null` borra el email o el teléfono al editar. */
 export interface EstudianteInput {
-  codigo: string
+  /** Al crear no se envía: el servidor asigna el siguiente (EST-0201…). */
+  codigo?: string
   nombres: string
   apellidos: string
   documento: string

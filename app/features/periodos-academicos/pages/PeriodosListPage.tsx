@@ -34,6 +34,8 @@ import {
   type PeriodoAcademico,
   type PeriodoListParams,
 } from '../model/types'
+import { BuscadorUrl } from '../../../shared/ui/BuscadorUrl'
+import { reportePeriodos } from '../reportes/periodosPdf'
 
 const LIMITES = [10, 20, 50]
 
@@ -53,6 +55,7 @@ function leerParametros(searchParams: URLSearchParams): PeriodoListParams {
     sortBy: ordenValido ? (sortBy as CampoOrdenable) : 'fechaInicio',
     order: order === 'asc' || order === 'desc' ? order : ordenValido ? 'asc' : 'desc',
     estado: ESTADOS_PERIODO.includes(estado as EstadoPeriodo) ? (estado as EstadoPeriodo) : undefined,
+    q: searchParams.get('q')?.trim() || undefined,
   }
 }
 
@@ -147,8 +150,8 @@ export function PeriodosListPage() {
   const [errorEliminar, setErrorEliminar] = useState<ErrorEliminar | null>(null)
   const eliminar = useEliminarPeriodo()
 
-  const hayFiltros = params.estado !== undefined
-  const limpiarFiltros = () => updateParams({ estado: null })
+  const hayFiltros = params.estado !== undefined || params.q !== undefined
+  const limpiarFiltros = () => updateParams({ estado: null, q: null })
   const total = query.data?.meta.total
 
   const cerrarEliminar = () => {
@@ -205,6 +208,7 @@ export function PeriodosListPage() {
       <PageHeader
         title="Períodos académicos"
         modulo="periodos"
+        reporte={() => reportePeriodos(params)}
         subtitle={
           // role="status": el lector de pantalla anuncia el nuevo total al filtrar.
           <span role="status">
@@ -228,6 +232,7 @@ export function PeriodosListPage() {
       <Card sx={{ mb: 2 }}>
         <CardContent sx={{ py: 1.5, '&:last-child': { pb: 1.5 } }}>
           <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.5} sx={{ alignItems: { sm: 'center' } }}>
+            <BuscadorUrl placeholder="Nombre de la gestión" minWidth={240} />
             <TextField
               select
               label="Estado"

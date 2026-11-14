@@ -32,6 +32,7 @@ import {
   type DocenteListParams,
   type EstadoDocente,
 } from '../model/types'
+import { reporteDocentes } from '../reportes/docentesPdf'
 
 const LIMITES = [10, 20, 50]
 
@@ -128,6 +129,7 @@ export function DocentesListPage() {
       <PageHeader
         title="Docentes"
         modulo="docentes"
+        reporte={() => reporteDocentes(params)}
         subtitle={
           // role="status": el lector de pantalla anuncia el nuevo total al filtrar.
           <span role="status">
@@ -150,7 +152,8 @@ export function DocentesListPage() {
         <CardContent sx={{ py: 1.5, '&:last-child': { pb: 1.5 } }}>
           <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.5} sx={{ alignItems: { sm: 'center' } }}>
             <TextField
-              label="Buscar por nombre"
+              label="Buscar"
+              placeholder="Nombre, código, email o teléfono"
               value={busqueda}
               onChange={(event) => setBusqueda(event.target.value)}
               sx={{ minWidth: { sm: 280 } }}

@@ -1,4 +1,5 @@
 import Add from '@mui/icons-material/Add'
+import UploadFileOutlined from '@mui/icons-material/UploadFileOutlined'
 import Box from '@mui/material/Box'
 import Button from '@mui/material/Button'
 import Card from '@mui/material/Card'
@@ -35,6 +36,10 @@ import {
   type Inscripcion,
   type InscripcionListParams,
 } from '../model/types'
+import { BuscadorUrl } from '../../../shared/ui/BuscadorUrl'
+import { reporteInscripciones } from '../reportes/inscripcionesPdf'
+import { useDesde } from '../../../shared/navegacion/desde'
+import { ImportarInscripcionesDialog } from '../components/ImportarInscripcionesDialog'
 
 const LIMITES = [10, 20, 50]
 
@@ -61,6 +66,7 @@ function leerParametros(searchParams: URLSearchParams): InscripcionListParams {
     cursoId: entero(searchParams.get('cursoId')),
     periodoAcademicoId: entero(searchParams.get('periodoAcademicoId')),
     estado: ESTADOS_INSCRIPCION.includes(estado as EstadoInscripcion) ? (estado as EstadoInscripcion) : undefined,
+    q: searchParams.get('q')?.trim() || undefined,
   }
 }
 
@@ -82,6 +88,7 @@ export function InscripcionesListPage({ modo }: InscripcionesListPageProps) {
   const fueraDeRango = usePaginaEnRango(query.data?.meta, query.data?.data.length, updateParams)
 
   const [creando, setCreando] = useState(false)
+  const [importando, setImportando] = useState(false)
   const [cambio, setCambio] = useState<{ inscripcion: Inscripcion; estado: EstadoInscripcion } | null>(null)
   const [aEliminar, setAEliminar] = useState<Inscripcion | null>(null)
 
@@ -89,8 +96,9 @@ export function InscripcionesListPage({ modo }: InscripcionesListPageProps) {
     params.estudianteId !== undefined ||
     params.cursoId !== undefined ||
     params.periodoAcademicoId !== undefined ||
-    params.estado !== undefined
-  const limpiarFiltros = () => updateParams({ estudianteId: null, cursoId: null, periodoAcademicoId: null, estado: null })
+    params.estado !== undefined ||
+    params.q !== undefined
+  const limpiarFiltros = () => updateParams({ estudianteId: null, cursoId: null, periodoAcademicoId: null, estado: null, q: null })
   const total = query.data?.meta.total
   const titulo = modo === 'gestion' ? 'Inscripciones' : 'Mis inscripciones'
 
@@ -101,6 +109,8 @@ export function InscripcionesListPage({ modo }: InscripcionesListPageProps) {
     if (filasEnPagina === 1 && params.page > 1) updateParams({ page: params.page - 1 })
   }
 
+  // Al entrar a un estudiante o curso desde aquí, su flecha «← Inscripciones» vuelve a esta lista con sus filtros.
+  const { desde } = useDesde(modo === 'mias' ? 'Mis inscripciones' : 'Inscripciones')
   const columnas: DataTableColumn<Inscripcion>[] = [
     ...(veOtrosEstudiantes
       ? [
@@ -111,7 +121,7 @@ export function InscripcionesListPage({ modo }: InscripcionesListPageProps) {
             render: (i: Inscripcion) => {
               const nombre = `${i.estudiante.apellidos}, ${i.estudiante.nombres}`
               return puedeAbrirFicha ? (
-                <MuiLink component={RouterLink} to={`/estudiantes/${i.estudiante.id}`} sx={{ fontWeight: 600 }}>
+                <MuiLink component={RouterLink} to={`/estudiantes/${i.estudiante.id}`} state={{ desde }} sx={{ fontWeight: 600 }}>
                   {nombre}
                 </MuiLink>
               ) : (
@@ -126,7 +136,7 @@ export function InscripcionesListPage({ modo }: InscripcionesListPageProps) {
       header: 'Curso',
       primary: !veOtrosEstudiantes,
       render: (i) => (
-        <MuiLink component={RouterLink} to={`/cursos/${i.curso.id}`}>
+        <MuiLink component={RouterLink} to={`/cursos/${i.curso.id}`} state={{ desde }}>
           {nombreCurso(i.curso)}
         </MuiLink>
       ),
@@ -161,21 +171,30 @@ export function InscripcionesListPage({ modo }: InscripcionesListPageProps) {
       <PageHeader
         title={titulo}
         modulo="inscripciones"
+        reporte={() => reporteInscripciones(params)}
         subtitle={
           // role="status": el lector de pantalla anuncia el nuevo total al filtrar.
           <span role="status">{total === undefined ? 'Cargando…' : `${total} ${total === 1 ? 'inscripción' : 'inscripciones'}`}</span>
         }
         actions={
           esAdmin && (
-            <Button variant="contained" startIcon={<Add />} onClick={() => setCreando(true)} sx={{ minHeight: 44 }}>
-              Nueva inscripción
-            </Button>
+            <>
+              <Button variant="outlined" startIcon={<UploadFileOutlined />} onClick={() => setImportando(true)} sx={{ minHeight: 44 }}>
+                Importar Excel
+              </Button>
+              <Button variant="contained" startIcon={<Add />} onClick={() => setCreando(true)} sx={{ minHeight: 44 }}>
+                Nueva inscripción
+              </Button>
+            </>
           )
         }
       />
 
       <Card sx={{ mb: 2 }}>
         <CardContent sx={{ py: 1.5, '&:last-child': { pb: 1.5 } }}>
+          <Box sx={{ mb: 1.5 }}>
+            <BuscadorUrl placeholder="Estudiante, código, documento, curso o gestión" />
+          </Box>
           <Box sx={{ display: 'grid', gap: 1.5, gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr', lg: 'repeat(4, 1fr)' } }}>
             {veOtrosEstudiantes && (
               <EstudianteSelect value={params.estudianteId ?? null} onChange={(id) => updateParams({ estudianteId: id })} />
@@ -244,6 +263,7 @@ export function InscripcionesListPage({ modo }: InscripcionesListPageProps) {
       </QueryState>
 
       {creando && <InscripcionFormDialog onClose={() => setCreando(false)} />}
+      {importando && <ImportarInscripcionesDialog onClose={() => setImportando(false)} />}
       {cambio && <CambiarEstadoDialog inscripcion={cambio.inscripcion} estado={cambio.estado} onClose={() => setCambio(null)} />}
       {aEliminar && <EliminarInscripcionDialog inscripcion={aEliminar} onClose={() => setAEliminar(null)} onDone={despuesDeEliminar} />}
     </>

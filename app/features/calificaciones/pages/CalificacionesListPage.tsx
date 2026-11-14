@@ -31,6 +31,8 @@ import {
   type CalificacionListParams,
   type TipoEvaluacion,
 } from '../model/types'
+import { BuscadorUrl } from '../../../shared/ui/BuscadorUrl'
+import { reporteCalificaciones } from '../reportes/calificacionesPdf'
 
 const LIMITES = [10, 20, 50]
 
@@ -65,6 +67,7 @@ function leerParametros(searchParams: URLSearchParams): CalificacionListParams {
     periodoAcademicoId: entero(searchParams.get('periodoAcademicoId')),
     fechaDesde: fechaUrl(searchParams.get('fechaDesde')),
     fechaHasta: fechaUrl(searchParams.get('fechaHasta')),
+    q: searchParams.get('q')?.trim() || undefined,
   }
 }
 
@@ -105,9 +108,11 @@ export function CalificacionesListPage({ modo }: CalificacionesListPageProps) {
     params.periodoAcademicoId,
     params.fechaDesde,
     params.fechaHasta,
+    params.q,
   ].filter((valor) => valor !== undefined).length
   const limpiarFiltros = () =>
     updateParams({
+      q: null,
       materiaId: null,
       docenteId: null,
       tipo: null,
@@ -187,6 +192,7 @@ export function CalificacionesListPage({ modo }: CalificacionesListPageProps) {
       <PageHeader
         title={titulo}
         modulo="calificaciones"
+        reporte={() => reporteCalificaciones(params, { titulo: modo === 'gestion' ? 'Calificaciones' : esEstudiante ? 'Mis calificaciones' : 'Planilla de calificaciones', deEstudiante: esEstudiante })}
         subtitle={
           // role="status": el lector de pantalla anuncia el nuevo total al filtrar.
           <span role="status">
@@ -206,6 +212,10 @@ export function CalificacionesListPage({ modo }: CalificacionesListPageProps) {
           )
         }
       />
+
+      <div className="mb-3">
+        <BuscadorUrl placeholder={esEstudiante ? 'Materia, docente, nota u observación' : 'Estudiante, materia, docente, nota u observación'} />
+      </div>
 
       <CalificacionFiltros
         params={params}

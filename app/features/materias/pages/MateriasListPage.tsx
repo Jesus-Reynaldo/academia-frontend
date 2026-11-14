@@ -31,6 +31,7 @@ import {
   type Materia,
   type MateriaListParams,
 } from '../model/types'
+import { reporteMaterias } from '../reportes/materiasPdf'
 
 const LIMITES = [10, 20, 50]
 
@@ -127,6 +128,7 @@ export function MateriasListPage() {
       <PageHeader
         title="Materias"
         modulo="materias"
+        reporte={() => reporteMaterias(params)}
         subtitle={
           // role="status": el lector de pantalla anuncia el nuevo total al filtrar.
           <span role="status">
@@ -156,7 +158,8 @@ export function MateriasListPage() {
           >
             <SearchField
               key={busqueda.key}
-              label="Buscar por nombre"
+              label="Buscar"
+              placeholder="Nombre, código o descripción"
               initialValue={busqueda.inicial}
               onSearch={(nombre) => updateParams({ nombre }, { replace: true })}
             />

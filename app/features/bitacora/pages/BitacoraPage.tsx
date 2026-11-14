@@ -13,6 +13,9 @@ import { ETIQUETA_ROL } from '../../../shared/config/roles'
 import { useUrlParams } from '../../../shared/hooks/useUrlParams'
 import { PageHeader } from '../../../shared/ui/PageHeader'
 import { QueryState } from '../../../shared/ui/QueryState'
+import { BuscadorUrl } from '../../../shared/ui/BuscadorUrl'
+import { reporteBitacora } from '../reportes/bitacoraPdf'
+import { useDesde } from '../../../shared/navegacion/desde'
 import { useBitacora } from '../api/bitacora.api'
 import {
   ACCIONES,
@@ -47,6 +50,7 @@ function leerParametros(sp: URLSearchParams): BitacoraParams {
     limit: POR_PAGINA,
     recurso: RECURSOS.includes(recurso as RecursoBitacora) ? (recurso as RecursoBitacora) : undefined,
     accion: ACCIONES.includes(accion as AccionBitacora) ? (accion as AccionBitacora) : undefined,
+    q: sp.get('q')?.trim() || undefined,
   }
 }
 
@@ -79,13 +83,14 @@ export function BitacoraPage() {
   const [searchParams, updateParams] = useUrlParams()
   const params = useMemo(() => leerParametros(searchParams), [searchParams])
   const query = useBitacora(params)
-  const hayFiltros = params.recurso !== undefined || params.accion !== undefined
+  const hayFiltros = params.recurso !== undefined || params.accion !== undefined || params.q !== undefined
   const total = query.data?.meta.total
 
   return (
     <>
       <PageHeader
         modulo="bitacora"
+        reporte={() => reporteBitacora(params)}
         title="Bitácora"
         subtitle={<span role="status">{total === undefined ? 'Cargando…' : `${total} ${total === 1 ? 'cambio registrado' : 'cambios registrados'}`}</span>}
       />
@@ -93,6 +98,7 @@ export function BitacoraPage() {
       <Card sx={{ mb: 2 }}>
         <CardContent sx={{ py: 1.5, '&:last-child': { pb: 1.5 } }}>
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+            <BuscadorUrl placeholder="Quién, qué o descripción" minWidth={240} />
             <TextField
               select
               label="Módulo"
@@ -120,7 +126,7 @@ export function BitacoraPage() {
               ))}
             </TextField>
             {hayFiltros && (
-              <Button onClick={() => updateParams({ recurso: null, accion: null })} sx={{ minHeight: 44, alignSelf: { xs: 'flex-start', sm: 'center' } }}>
+              <Button onClick={() => updateParams({ recurso: null, accion: null, q: null })} sx={{ minHeight: 44, alignSelf: { xs: 'flex-start', sm: 'center' } }}>
                 Limpiar filtros
               </Button>
             )}
@@ -172,6 +178,7 @@ export function BitacoraPage() {
 }
 
 function Entrada({ registro: r }: { registro: RegistroBitacora }) {
+  const { desde } = useDesde('Bitácora')
   const recurso = RECURSO[r.recurso]
   const Icono = ICONO_MODULO[recurso.modulo]
   const enlace = recurso.ruta && r.recursoId && r.accion !== 'ELIMINAR' ? `${recurso.ruta}/${r.recursoId}` : null
@@ -188,7 +195,7 @@ function Entrada({ registro: r }: { registro: RegistroBitacora }) {
           {r.usuario && <span className="text-texto-suave"> ({ETIQUETA_ROL[r.usuario.rol]})</span>}{' '}
           {ETIQUETA_ACCION[r.accion].toLowerCase()} {recurso.articulo} {recurso.etiqueta}{' '}
           {enlace ? (
-            <Link component={RouterLink} to={enlace} underline="always">
+            <Link component={RouterLink} to={enlace} state={{ desde }} underline="always">
               «{legible(r.descripcion)}»
             </Link>
           ) : (

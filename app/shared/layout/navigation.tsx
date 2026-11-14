@@ -27,6 +27,7 @@ export function navigationFor(rol: Rol): NavItem[] {
         item('Cursos', '/cursos', 'cursos', 'Académico'),
         item('Materias', '/materias', 'materias', 'Académico'),
         item('Períodos', '/periodos-academicos', 'periodos', 'Académico'),
+        item('Asignación docente', '/asignaciones-docentes', 'asignaciones', 'Académico'),
         item('Inscripciones', '/inscripciones', 'inscripciones', 'Gestión'),
         item('Calificaciones', '/calificaciones', 'calificaciones', 'Gestión'),
         item('Bitácora', '/bitacora', 'bitacora', 'Sistema'),
@@ -36,6 +37,7 @@ export function navigationFor(rol: Rol): NavItem[] {
     case 'DOCENTE':
       return [
         item('Inicio', '/', 'inicio'),
+        item('Mis asignaciones', '/asignaciones-docentes', 'asignaciones'),
         item('Mis calificaciones', '/mi/calificaciones', 'calificaciones'),
         item('Estudiantes', '/estudiantes', 'estudiantes'),
         item('Cursos', '/cursos', 'cursos'),

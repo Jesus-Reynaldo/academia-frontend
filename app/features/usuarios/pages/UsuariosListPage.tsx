@@ -25,6 +25,7 @@ import { EliminarUsuarioDialog } from '../components/EliminarUsuarioDialog'
 import { PersonaVinculada } from '../components/PersonaVinculada'
 import { UsuarioRowMenu } from '../components/UsuarioRowMenu'
 import { CAMPOS_ORDENABLES, type CampoOrdenable, type CuentaUsuario, type UsuarioListParams } from '../model/types'
+import { reporteUsuarios } from '../reportes/usuariosPdf'
 
 const LIMITES = [10, 20, 50]
 
@@ -43,6 +44,7 @@ function leerParametros(searchParams: URLSearchParams): UsuarioListParams {
     sortBy: CAMPOS_ORDENABLES.includes(sortBy as CampoOrdenable) ? (sortBy as CampoOrdenable) : 'email',
     order: order === 'desc' ? 'desc' : 'asc',
     rol: TODOS_LOS_ROLES.includes(rol as Rol) ? (rol as Rol) : undefined,
+    activo: searchParams.get('activo') === 'true' ? true : searchParams.get('activo') === 'false' ? false : undefined,
     q: q || undefined,
   }
 }
@@ -62,9 +64,9 @@ export function UsuariosListPage() {
 
   // SearchField guarda su propio texto: se reinicia cambiando su `key` (al limpiar filtros).
   const [busqueda, setBusqueda] = useState({ key: 0, inicial: params.q ?? '' })
-  const hayFiltros = params.rol !== undefined || params.q !== undefined
+  const hayFiltros = params.rol !== undefined || params.q !== undefined || params.activo !== undefined
   const limpiarFiltros = () => {
-    updateParams({ rol: null, q: null })
+    updateParams({ rol: null, q: null, activo: null })
     setBusqueda((actual) => ({ key: actual.key + 1, inicial: '' }))
   }
 
@@ -108,6 +110,7 @@ export function UsuariosListPage() {
       <PageHeader
         title="Usuarios"
         modulo="usuarios"
+        reporte={() => reporteUsuarios(params)}
         subtitle={
           // role="status": el lector de pantalla anuncia el nuevo total al filtrar.
           <span role="status">{total === undefined ? 'Cargando…' : `${total} ${total === 1 ? 'usuario' : 'usuarios'}`}</span>
@@ -125,7 +128,7 @@ export function UsuariosListPage() {
             <SearchField
               key={busqueda.key}
               label="Buscar"
-              placeholder="Email de la cuenta"
+              placeholder="Email o nombre de la persona"
               delayMs={300}
               initialValue={busqueda.inicial}
               onSearch={(texto) => updateParams({ q: texto }, { replace: true })}
@@ -144,6 +147,18 @@ export function UsuariosListPage() {
                   {ETIQUETA_ROL[valor]}
                 </MenuItem>
               ))}
+            </TextField>
+            <TextField
+              select
+              label="Estado"
+              value={params.activo === undefined ? '' : String(params.activo)}
+              onChange={(event) => updateParams({ activo: event.target.value || null })}
+              sx={{ minWidth: { sm: 180 } }}
+              slotProps={{ select: { displayEmpty: true }, inputLabel: { shrink: true } }}
+            >
+              <MenuItem value="">Todas</MenuItem>
+              <MenuItem value="true">Activas</MenuItem>
+              <MenuItem value="false">Desactivadas</MenuItem>
             </TextField>
             {hayFiltros && (
               <Button onClick={limpiarFiltros} sx={{ alignSelf: { xs: 'flex-start', sm: 'center' }, minHeight: 44 }}>

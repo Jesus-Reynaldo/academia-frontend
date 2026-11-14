@@ -31,6 +31,7 @@ import {
   type Estudiante,
   type EstudianteListParams,
 } from '../model/types'
+import { reporteEstudiantes } from '../reportes/estudiantesPdf'
 
 const LIMITES = [10, 20, 50]
 
@@ -127,6 +128,7 @@ export function EstudiantesListPage() {
       <PageHeader
         title="Estudiantes"
         modulo="estudiantes"
+        reporte={() => reporteEstudiantes(params)}
         subtitle={
           // role="status": el lector de pantalla anuncia el nuevo total al filtrar.
           <span role="status">{total === undefined ? 'Cargando…' : `${total} ${total === 1 ? 'estudiante' : 'estudiantes'}`}</span>
@@ -156,7 +158,7 @@ export function EstudiantesListPage() {
             <SearchField
               key={busqueda.key}
               label="Buscar"
-              placeholder="Nombre, código o documento"
+              placeholder="Nombre, código, documento o email"
               delayMs={300}
               initialValue={busqueda.inicial}
               onSearch={(q) => updateParams({ q }, { replace: true })}
