@@ -40,4 +40,6 @@ export interface UsuarioListParams {
   rol?: Rol
   /** Texto a buscar en el email. La API no lo admite: se filtra en el navegador (ver usuariosApi.list). */
   q?: string
+  /** true: solo cuentas activas; false: solo desactivadas; sin valor: todas. */
+  activo?: boolean
 }
