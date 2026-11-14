@@ -2,7 +2,7 @@
 
 > Documento vivo. Reúne **todo lo que se trabaje en el frontend después del plan principal** (`docs/UI-UX-PLAN.md`), que ya está cumplido. Cada mejora se diagnostica, se especifica, se registra en Jira, se implementa y se verifica aquí.
 >
-> **Estado:** en curso · **Inicio:** 12/11/2026 · **Épica en Jira:** DS-8 · **Primera área:** interfaz del estudiante
+> **Estado:** en revisión (PR #16 frontend + PR #3 backend) · **Inicio:** 12/11/2026 · **Épica en Jira:** DS-8 · **Áreas:** estudiante, docente y administrador
 
 ---
 
@@ -10,9 +10,10 @@
 
 1. [Forma de trabajo](#1-forma-de-trabajo)
 2. [Interfaz del estudiante](#2-interfaz-del-estudiante)
-3. [Interfaz del docente (pendiente)](#3-interfaz-del-docente-pendiente)
-4. [Interfaz del administrador (pendiente)](#4-interfaz-del-administrador-pendiente)
+3. [Interfaz del docente](#3-interfaz-del-docente)
+4. [Interfaz del administrador](#4-interfaz-del-administrador)
 5. [Registro de cambios](#5-registro-de-cambios)
+6. [Diseño, rendimiento y conexión entre roles](#6-diseño-rendimiento-y-conexión-entre-roles)
 
 ---
 
@@ -194,10 +195,12 @@ Datos personales, curso actual, inscripciones como línea de tiempo y cambio de 
 | Tarea | Módulo | Estado | PR |
 |---|---|---|---|
 | DS-18 | Historial académico: libreta clara e impresión completa | En revisión | #15 |
-| DS-19 | Panel de inicio: tablero «¿cómo voy?» | Por hacer | — |
-| DS-20 | Calificaciones: Mis materias y detalle por materia | Por hacer | — |
-| DS-21 | Navegación del estudiante: barra inferior y menú | Por hacer | — |
-| DS-22 | Inscripciones y cuenta: Mi cuenta | Por hacer | — |
+| DS-19 | Panel de inicio: tablero «¿cómo voy?» | En revisión | #16 |
+| DS-20 | Calificaciones: Mis materias y detalle por materia | En revisión | #16 |
+| DS-21 | Navegación del estudiante: barra inferior y menú | En revisión | #16 |
+| DS-22 | Inscripciones y cuenta: Mi cuenta | En revisión | #16 |
+
+> El PR #16 incluye también el commit de DS-18 (#15): aceptar #16 cubre ambos.
 
 **Orden recomendado:** DS-18 (corrige el hallazgo crítico) → DS-19 → DS-20 → DS-21 → DS-22.
 
@@ -205,13 +208,43 @@ Datos personales, curso actual, inscripciones como línea de tiempo y cambio de 
 
 ---
 
-## 3. Interfaz del docente (pendiente)
+## 3. Interfaz del docente
 
-Se analizará con el mismo método (perfiles, auditoría, hallazgos, propuesta, tareas por módulo) cuando termine la interfaz del estudiante.
+Auditoría con 4 perfiles (Ana García con muchas notas, Luis Mamani, un docente nuevo sin notas y uno inactivo) × 7 pantallas × PC y celular.
 
-## 4. Interfaz del administrador (pendiente)
+| Hallazgo | Gravedad | Corrección |
+|---|---|---|
+| El formulario de notas cargaba solo las 100 inscripciones más recientes del colegio: **44 de 144 estudiantes no podían recibir nota**. | Crítica | Primero se elige el curso y se listan todas sus inscripciones activas, ordenadas por apellido. |
+| El Inicio deducía los cursos de las últimas 100 notas: Ana veía 3 de sus 6 cursos. | Alta | Cursos activos + conteo de notas por curso. |
+| Tipos en mayúsculas («PARCIAL»), espacio vacío bajo los cursos, enlaces sin subrayar (axe). | Media | Etiquetas legibles, diseño corregido, enlaces subrayados. |
+| «Registrar calificación» del Inicio llevaba a una lista. | Baja | Abre el formulario directamente (`?nueva=1`). |
 
-Ídem.
+Además: tarjetas con sus totales (notas, cursos, materias, promedio que otorga). El docente inactivo ve el mensaje del servidor al intentar registrar.
+
+## 4. Interfaz del administrador
+
+| Mejora | Detalle |
+|---|---|
+| Acciones visibles | Las tablas muestran íconos (ver, editar, desactivar, cambiar estado) en la columna **Acciones**, en lugar del menú ⋮. |
+| Nada se elimina | «Eliminar» pasa a **Desactivar / Activar** (PATCH de estado); los inactivos van al final de cada tabla. Períodos e inscripciones no se borran: se finalizan o retiran. |
+| Usuarios | Buscador por email. |
+| Inicio | Promedio por curso en barras horizontales con color por nota y línea 51; distribución con valores. |
+| **Bitácora** | Quién creó, modificó o desactivó qué y cuándo, agrupada por día, con filtros (requiere el backend). |
+| **Backup** | Descargar toda la información (`.json.gz`, ~300 KB) y restaurarla escribiendo CONFIRMAR; antes se descarga un backup del estado actual. |
+| **Configuración** | Nombre, sigla y logotipo de la institución (login, menú y pestaña) y **Despertador** del servidor para Render/Aiven. |
+
+### 4.1 Cambios en el backend (PR #3 de academia-backend)
+
+Bitácora, Backup, Configuración y Despertador necesitan módulos nuevos en el backend. Se agregaron con permiso de Luther, sin cambiar la lógica existente:
+
+| Módulo | Endpoints | Base de datos |
+|---|---|---|
+| Bitácora | `GET /bitacora` (ADMIN); interceptor global que registra POST/PATCH/PUT/DELETE | Tabla `bitacora` |
+| Respaldo | `GET /respaldo`, `GET /respaldo/resumen`, `POST /respaldo/restaurar` (ADMIN, en una transacción) | — |
+| Configuración | `GET /configuracion`, `GET /configuracion/logo` (públicos); `PATCH`, `PUT/DELETE logo` (ADMIN) | Tabla `configuracion` |
+| Despertador | `GET /salud` (público); `GET/PATCH /configuracion/despertador`, `POST .../probar` (ADMIN) | Columna `despertadorActivo` |
+
+Migraciones aditivas (`npx prisma migrate deploy`). Al publicar en Render hay que permitir el dominio del frontend en el CORS de `main.ts` y confirmar `RENDER_EXTERNAL_URL`.
 
 ---
 
@@ -221,3 +254,19 @@ Se analizará con el mismo método (perfiles, auditoría, hallazgos, propuesta, 
 |---|---|---|---|
 | 12/11/2026 | — | — | Creación del documento con el diagnóstico y la propuesta de la interfaz del estudiante. Tareas DS-18 a DS-22 creadas en Jira. |
 | 12/11/2026 | DS-18 | #15 | Historial: impresión A4 completa, gestión más reciente por defecto, solo columnas con datos, notas bajo 51 con icono y texto, resumen por gestión, tarjetas en celular y tabla accesible con teclado. Verificado: axe 0 violaciones en 14 vistas, 0 celdas «—», ninguna tabla impresa cortada. |
+| 12/11/2026 | DS-19 a DS-22 | #16 | Estudiante completo: Inicio «¿cómo voy?» con situación y materias para reforzar, Mis materias y detalle con observaciones, Mi cuenta, barra inferior en celular. Verificado con 7 perfiles × 6 pantallas × 2 tamaños: axe 0, 0 errores. |
+| 13/11/2026 | Docente | #16 | Registro de notas por curso (todos los estudiantes activos), Inicio con todos sus cursos, tipos legibles. Verificado: 4 docentes × 7 pantallas × 2 tamaños, registrar y editar notas. |
+| 13/11/2026 | Administrador | #16 | Buscador de usuarios, Inicio accesible. Prueba integrada de los 3 roles (admin crea → docente califica → estudiante ve → admin retira y desactiva): 43/43 en PC y celular. Corregido: el estudiante retirado veía «(en curso)». |
+| 13/11/2026 | Diseño | #16 | Tailwind v4 (sin preflight, en capas), acciones con íconos, un ícono por módulo, gráficos más claros (tendencia en la evolución del estudiante), Motion y precarga de pantallas. |
+| 13/11/2026 | Administrador | #16 | Desactivar en lugar de eliminar; inactivos al final de las tablas. Verificado: 0 peticiones DELETE. |
+| 13–14/11/2026 | Sistema | #16, back #3 | Bitácora, Backup y Configuración (nombre, sigla, logo) con backend nuevo. Verificado: 54 pruebas unitarias del backend, restauración con archivos dañados sin cambios, permisos por rol. |
+| 14/11/2026 | Sistema | #16, back #3 | Despertador (GET /salud + visita cada 10 min) y aviso «Despertando el servidor…» en el login. Auditoría final: 52 pantallas de los 3 roles, axe 0, 0 errores. |
+
+---
+
+## 6. Diseño, rendimiento y conexión entre roles
+
+- **Diseño:** Tailwind v4 convive con MUI (sin preflight y en `@layer`); los colores salen de `shared/theme/tokens.ts`. Un solo ícono por módulo en `shared/config/modulos.tsx`.
+- **Fluidez:** Motion (respeta «reducir movimiento»), precarga de pantallas al apuntar el menú (`prefetch="intent"`) y barra fina de carga.
+- **Peso medido** (compilación de producción, comprimido): CSS 13 KB; todo el sistema 535 KB; el Inicio suma 116 KB por los gráficos. Mejora pendiente: cargar los gráficos solo cuando se necesitan.
+- **Conexión entre roles:** lo que crea el administrador lo usa el docente, lo que registra el docente lo ve el estudiante, y desactivar o retirar tiene efecto inmediato en los otros roles.
