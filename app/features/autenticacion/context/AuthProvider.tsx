@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router'
 import { configureHttp } from '../../../shared/api/http'
 import { authApi } from '../api/auth.api'
 import type { Usuario } from '../model/types'
-import { clearToken, readToken, saveToken } from '../model/token-storage'
+import { SALIO_A_PROPOSITO, clearToken, readToken, saveToken } from '../model/token-storage'
 import { AuthContext, type AuthContextValue, type AuthStatus } from './auth-context'
 
 // El cliente HTTP lee el token siempre desde el almacenamiento de sesión.
@@ -67,6 +67,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [])
 
   const logout = useCallback(() => {
+    // Cierre de sesión a propósito: quien entre después empieza en el Inicio (no en la última pantalla).
+    try {
+      sessionStorage.setItem(SALIO_A_PROPOSITO, '1')
+    } catch {
+      /* sin almacenamiento: igual se valida el rol al entrar */
+    }
     closeSession()
     void navigate('/login', { replace: true })
   }, [closeSession, navigate])
