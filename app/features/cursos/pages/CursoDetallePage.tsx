@@ -28,6 +28,7 @@ import { MateriasDelCurso } from '../components/MateriasDelCurso'
 import { OcupacionCurso } from '../components/OcupacionCurso'
 import type { PaginaDetalleParams } from '../model/types'
 import { BotonCambioEstado } from '../../../shared/ui/BotonCambioEstado'
+import { reporteInscripciones } from '../../inscripciones'
 
 const LIMITES = [10, 20, 50]
 type Pestana = 'estudiantes' | 'materias'
@@ -97,6 +98,12 @@ export function CursoDetallePage({ id }: { id: number }) {
           <PageHeader
             title={curso.nombre}
             modulo="cursos"
+            reporte={() =>
+              reporteInscripciones(
+                { page: 1, limit: 100, sortBy: 'fechaInscripcion', order: 'asc', cursoId: curso.id, estado: 'ACTIVA' },
+                { titulo: `Nómina de ${curso.nombre}`, archivo: `nomina-${curso.nombre.replace(/\s+/g, '-')}` },
+              )
+            }
             subtitle={
               <Stack direction="row" spacing={1} sx={{ alignItems: 'center', flexWrap: 'wrap' }}>
                 <span>{curso.paralelo ? `${curso.nivel} · Paralelo ${curso.paralelo}` : curso.nivel}</span>

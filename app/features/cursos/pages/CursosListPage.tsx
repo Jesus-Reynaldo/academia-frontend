@@ -33,6 +33,7 @@ import {
   type CursoListParams,
   type EstadoCurso,
 } from '../model/types'
+import { reporteCursos } from '../reportes/cursosPdf'
 
 const LIMITES = [10, 20, 50]
 
@@ -135,6 +136,7 @@ export function CursosListPage() {
       <PageHeader
         title="Cursos"
         modulo="cursos"
+        reporte={() => reporteCursos(params)}
         subtitle={
           // role="status": el lector de pantalla anuncia el nuevo total al filtrar.
           <span role="status">{total === undefined ? 'Cargando…' : `${total} ${total === 1 ? 'curso' : 'cursos'}`}</span>

@@ -32,6 +32,7 @@ import {
   type DocenteListParams,
   type EstadoDocente,
 } from '../model/types'
+import { reporteDocentes } from '../reportes/docentesPdf'
 
 const LIMITES = [10, 20, 50]
 
@@ -128,6 +129,7 @@ export function DocentesListPage() {
       <PageHeader
         title="Docentes"
         modulo="docentes"
+        reporte={() => reporteDocentes(params)}
         subtitle={
           // role="status": el lector de pantalla anuncia el nuevo total al filtrar.
           <span role="status">

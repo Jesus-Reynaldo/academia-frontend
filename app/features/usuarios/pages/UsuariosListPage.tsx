@@ -25,6 +25,7 @@ import { EliminarUsuarioDialog } from '../components/EliminarUsuarioDialog'
 import { PersonaVinculada } from '../components/PersonaVinculada'
 import { UsuarioRowMenu } from '../components/UsuarioRowMenu'
 import { CAMPOS_ORDENABLES, type CampoOrdenable, type CuentaUsuario, type UsuarioListParams } from '../model/types'
+import { reporteUsuarios } from '../reportes/usuariosPdf'
 
 const LIMITES = [10, 20, 50]
 
@@ -109,6 +110,7 @@ export function UsuariosListPage() {
       <PageHeader
         title="Usuarios"
         modulo="usuarios"
+        reporte={() => reporteUsuarios(params)}
         subtitle={
           // role="status": el lector de pantalla anuncia el nuevo total al filtrar.
           <span role="status">{total === undefined ? 'Cargando…' : `${total} ${total === 1 ? 'usuario' : 'usuarios'}`}</span>

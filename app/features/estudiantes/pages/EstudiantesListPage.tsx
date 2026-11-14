@@ -31,6 +31,7 @@ import {
   type Estudiante,
   type EstudianteListParams,
 } from '../model/types'
+import { reporteEstudiantes } from '../reportes/estudiantesPdf'
 
 const LIMITES = [10, 20, 50]
 
@@ -127,6 +128,7 @@ export function EstudiantesListPage() {
       <PageHeader
         title="Estudiantes"
         modulo="estudiantes"
+        reporte={() => reporteEstudiantes(params)}
         subtitle={
           // role="status": el lector de pantalla anuncia el nuevo total al filtrar.
           <span role="status">{total === undefined ? 'Cargando…' : `${total} ${total === 1 ? 'estudiante' : 'estudiantes'}`}</span>

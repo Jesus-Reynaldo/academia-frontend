@@ -29,6 +29,8 @@ import { TarjetasCurso } from '../components/TarjetasCurso'
 import { agruparPeriodos } from '../model/agrupar'
 import { resumenPeriodo } from '../model/desglose'
 import type { HistorialAcademico, HistorialCurso, HistorialPeriodo } from '../model/types'
+import { BotonPdf } from '../../../shared/ui/BotonPdf'
+import { descargarLibreta } from '../reportes/libretaPdf'
 
 interface HistorialAcademicoPageProps {
   estudianteId: number | null
@@ -152,15 +154,12 @@ function HistorialContenido({ historial, showTitle }: { historial: HistorialAcad
   const periodoSeleccionado = periodos.find((periodo) => periodo.periodoId === periodoActivo) ?? periodos.at(-1)
 
   const botonImprimir = (
-    <Button
-      className="no-print"
-      variant="outlined"
-      startIcon={<PrintOutlined />}
-      onClick={() => window.print()}
-      sx={{ minHeight: 44 }}
-    >
-      Imprimir libreta
-    </Button>
+    <Box className="no-print" sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
+      <BotonPdf etiqueta="Libreta en PDF" variante="contained" generar={() => descargarLibreta(historial)} />
+      <Button variant="outlined" startIcon={<PrintOutlined />} onClick={() => window.print()} sx={{ minHeight: 44 }}>
+        Imprimir
+      </Button>
+    </Box>
   )
 
   return (

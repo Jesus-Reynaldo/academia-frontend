@@ -36,6 +36,7 @@ import {
   type InscripcionListParams,
 } from '../model/types'
 import { BuscadorUrl } from '../../../shared/ui/BuscadorUrl'
+import { reporteInscripciones } from '../reportes/inscripcionesPdf'
 
 const LIMITES = [10, 20, 50]
 
@@ -164,6 +165,7 @@ export function InscripcionesListPage({ modo }: InscripcionesListPageProps) {
       <PageHeader
         title={titulo}
         modulo="inscripciones"
+        reporte={() => reporteInscripciones(params)}
         subtitle={
           // role="status": el lector de pantalla anuncia el nuevo total al filtrar.
           <span role="status">{total === undefined ? 'Cargando…' : `${total} ${total === 1 ? 'inscripción' : 'inscripciones'}`}</span>

@@ -35,6 +35,7 @@ import {
   type PeriodoListParams,
 } from '../model/types'
 import { BuscadorUrl } from '../../../shared/ui/BuscadorUrl'
+import { reportePeriodos } from '../reportes/periodosPdf'
 
 const LIMITES = [10, 20, 50]
 
@@ -207,6 +208,7 @@ export function PeriodosListPage() {
       <PageHeader
         title="Períodos académicos"
         modulo="periodos"
+        reporte={() => reportePeriodos(params)}
         subtitle={
           // role="status": el lector de pantalla anuncia el nuevo total al filtrar.
           <span role="status">

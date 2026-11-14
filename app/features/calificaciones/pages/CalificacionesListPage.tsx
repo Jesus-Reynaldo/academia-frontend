@@ -32,6 +32,7 @@ import {
   type TipoEvaluacion,
 } from '../model/types'
 import { BuscadorUrl } from '../../../shared/ui/BuscadorUrl'
+import { reporteCalificaciones } from '../reportes/calificacionesPdf'
 
 const LIMITES = [10, 20, 50]
 
@@ -191,6 +192,7 @@ export function CalificacionesListPage({ modo }: CalificacionesListPageProps) {
       <PageHeader
         title={titulo}
         modulo="calificaciones"
+        reporte={() => reporteCalificaciones(params, { titulo: modo === 'gestion' ? 'Calificaciones' : esEstudiante ? 'Mis calificaciones' : 'Planilla de calificaciones', deEstudiante: esEstudiante })}
         subtitle={
           // role="status": el lector de pantalla anuncia el nuevo total al filtrar.
           <span role="status">

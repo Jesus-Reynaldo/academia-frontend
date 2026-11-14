@@ -17,6 +17,8 @@ import { useAuth, useUsuario } from '../../autenticacion'
 import { useEstudiante } from '../../estudiantes'
 import { useInscripcionesList } from '../api/useInscripciones'
 import { nombreCurso } from '../model/etiquetas'
+import { BotonPdf } from '../../../shared/ui/BotonPdf'
+import { descargarConstancia } from '../reportes/constanciaPdf'
 
 /** Mi cuenta (estudiante): datos personales, inscripciones como línea de tiempo y seguridad. */
 export function MiCuentaPage() {
@@ -56,7 +58,11 @@ export function MiCuentaPage() {
         </SectionCard>
 
         <Box id="inscripciones">
-          <SectionCard modulo="inscripciones" title="Mis inscripciones">
+          <SectionCard
+            modulo="inscripciones"
+            title="Mis inscripciones"
+            actions={actual && <BotonPdf etiqueta="Constancia de inscripción" generar={() => descargarConstancia(actual)} />}
+          >
             {inscripciones.isPending ? (
               <Skeleton variant="rounded" height={120} />
             ) : inscripciones.isError ? (

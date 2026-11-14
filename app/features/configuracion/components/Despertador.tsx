@@ -91,7 +91,7 @@ export function Despertador() {
               Dirección que se visita (también sirve para un monitor externo como UptimeRobot):
             </Typography>
             <div className="mt-1 flex items-center gap-1 rounded-lg border border-borde bg-fondo pl-3">
-              <code className="min-w-0 flex-1 overflow-x-auto whitespace-nowrap text-sm">{d.url}</code>
+              <code tabIndex={0} aria-label="Dirección que se visita" className="min-w-0 flex-1 overflow-x-auto whitespace-nowrap text-sm">{d.url}</code>
               <Tooltip title="Copiar dirección">
                 <IconButton
                   aria-label="Copiar dirección"

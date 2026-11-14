@@ -14,6 +14,7 @@ import { useUrlParams } from '../../../shared/hooks/useUrlParams'
 import { PageHeader } from '../../../shared/ui/PageHeader'
 import { QueryState } from '../../../shared/ui/QueryState'
 import { BuscadorUrl } from '../../../shared/ui/BuscadorUrl'
+import { reporteBitacora } from '../reportes/bitacoraPdf'
 import { useBitacora } from '../api/bitacora.api'
 import {
   ACCIONES,
@@ -88,6 +89,7 @@ export function BitacoraPage() {
     <>
       <PageHeader
         modulo="bitacora"
+        reporte={() => reporteBitacora(params)}
         title="Bitácora"
         subtitle={<span role="status">{total === undefined ? 'Cargando…' : `${total} ${total === 1 ? 'cambio registrado' : 'cambios registrados'}`}</span>}
       />

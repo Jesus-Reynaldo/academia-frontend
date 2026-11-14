@@ -2,6 +2,7 @@ import Box from '@mui/material/Box'
 import Typography from '@mui/material/Typography'
 import type { ReactNode } from 'react'
 import { ICONO_MODULO, type Modulo } from '../config/modulos'
+import { BotonPdf } from './BotonPdf'
 
 interface PageHeaderProps {
   title: string
@@ -9,9 +10,11 @@ interface PageHeaderProps {
   actions?: ReactNode
   /** Ícono del módulo junto al título (el mismo que en el menú). */
   modulo?: Modulo
+  /** Si se pasa, aparece el botón «Reporte PDF» (con los filtros que el usuario tiene puestos). */
+  reporte?: () => Promise<void>
 }
 
-export function PageHeader({ title, subtitle, actions, modulo }: PageHeaderProps) {
+export function PageHeader({ title, subtitle, actions, modulo, reporte }: PageHeaderProps) {
   const Icono = modulo ? ICONO_MODULO[modulo] : null
   return (
     <Box
@@ -41,7 +44,12 @@ export function PageHeader({ title, subtitle, actions, modulo }: PageHeaderProps
         )}
       </Box>
       </Box>
-      {actions && <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>{actions}</Box>}
+      {(actions || reporte) && (
+        <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
+          {reporte && <BotonPdf generar={reporte} />}
+          {actions}
+        </Box>
+      )}
     </Box>
   )
 }
