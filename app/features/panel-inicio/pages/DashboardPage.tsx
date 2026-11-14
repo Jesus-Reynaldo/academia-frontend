@@ -10,7 +10,6 @@ import {
   YAxis,
 } from 'recharts'
 import AddOutlined from '@mui/icons-material/AddOutlined'
-import ClassOutlined from '@mui/icons-material/ClassOutlined'
 import InsightsOutlined from '@mui/icons-material/InsightsOutlined'
 import Box from '@mui/material/Box'
 import Button from '@mui/material/Button'
@@ -61,6 +60,9 @@ import {
 } from '../api/useDashboard'
 import type { CalificacionDashboard } from '../model/types'
 import { InicioEstudiante } from './InicioEstudiante'
+import { ICONO_MODULO } from '../../../shared/config/modulos'
+
+const IconoCurso = ICONO_MODULO.cursos
 import { GraficoPromedioCursos } from '../components/GraficoPromedioCursos'
 import { colorNota } from '../../../shared/lib/colorNota'
 import { ETIQUETA_TIPO, type TipoEvaluacion } from '../../calificaciones'
@@ -484,7 +486,7 @@ function CursoDocenteCard({
         <CardContent>
           <div className="flex items-center gap-2">
             <span aria-hidden className="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-primary-tint text-primary">
-              <ClassOutlined fontSize="small" />
+              <IconoCurso fontSize="small" />
             </span>
             <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>{curso.nombre}</Typography>
           </div>
