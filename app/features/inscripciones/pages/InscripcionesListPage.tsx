@@ -37,6 +37,7 @@ import {
 } from '../model/types'
 import { BuscadorUrl } from '../../../shared/ui/BuscadorUrl'
 import { reporteInscripciones } from '../reportes/inscripcionesPdf'
+import { useDesde } from '../../../shared/navegacion/desde'
 
 const LIMITES = [10, 20, 50]
 
@@ -105,6 +106,8 @@ export function InscripcionesListPage({ modo }: InscripcionesListPageProps) {
     if (filasEnPagina === 1 && params.page > 1) updateParams({ page: params.page - 1 })
   }
 
+  // Al entrar a un estudiante o curso desde aquí, su flecha «← Inscripciones» vuelve a esta lista con sus filtros.
+  const { desde } = useDesde(modo === 'mias' ? 'Mis inscripciones' : 'Inscripciones')
   const columnas: DataTableColumn<Inscripcion>[] = [
     ...(veOtrosEstudiantes
       ? [
@@ -115,7 +118,7 @@ export function InscripcionesListPage({ modo }: InscripcionesListPageProps) {
             render: (i: Inscripcion) => {
               const nombre = `${i.estudiante.apellidos}, ${i.estudiante.nombres}`
               return puedeAbrirFicha ? (
-                <MuiLink component={RouterLink} to={`/estudiantes/${i.estudiante.id}`} sx={{ fontWeight: 600 }}>
+                <MuiLink component={RouterLink} to={`/estudiantes/${i.estudiante.id}`} state={{ desde }} sx={{ fontWeight: 600 }}>
                   {nombre}
                 </MuiLink>
               ) : (
@@ -130,7 +133,7 @@ export function InscripcionesListPage({ modo }: InscripcionesListPageProps) {
       header: 'Curso',
       primary: !veOtrosEstudiantes,
       render: (i) => (
-        <MuiLink component={RouterLink} to={`/cursos/${i.curso.id}`}>
+        <MuiLink component={RouterLink} to={`/cursos/${i.curso.id}`} state={{ desde }}>
           {nombreCurso(i.curso)}
         </MuiLink>
       ),

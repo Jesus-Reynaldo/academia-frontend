@@ -61,6 +61,7 @@ import {
 import type { CalificacionDashboard } from '../model/types'
 import { InicioEstudiante } from './InicioEstudiante'
 import { Aparecer } from '../../../shared/ui/Aparecer'
+import { useDesde } from '../../../shared/navegacion/desde'
 import { BotonPdf } from '../../../shared/ui/BotonPdf'
 import { descargarResumenAcademico, reporteEnRiesgo } from '../reportes/resumenPdf'
 import { ICONO_MODULO } from '../../../shared/config/modulos'
@@ -238,6 +239,7 @@ function ListaCalificaciones({ query }: { query: ReturnType<typeof useCalificaci
 }
 
 function DashboardAdmin() {
+  const { desde } = useDesde('Inicio')
   const [periodoIdManual, setPeriodoIdManual] = useState<number | undefined>(undefined)
   const [materiaId, setMateriaId] = useState<number | undefined>(undefined)
   const [umbral, setUmbral] = useState(51)
@@ -454,7 +456,7 @@ function DashboardAdmin() {
                         sx={{ alignItems: 'center', justifyContent: 'space-between', gap: 1, p: 1, border: 1, borderColor: 'divider', borderRadius: 2 }}
                       >
                         <Box sx={{ minWidth: 0 }}>
-                          <Link component={RouterLink} to={`/estudiantes/${estudiante.estudianteId}`} underline="always">{estudiante.nombre}</Link>
+                          <Link component={RouterLink} to={`/estudiantes/${estudiante.estudianteId}`} state={{ desde }} underline="always">{estudiante.nombre}</Link>
                           <Typography variant="body2" color="text.secondary">
                             {estudiante.codigo} · {estudiante.cantidadCalificaciones} notas
                           </Typography>
@@ -509,6 +511,7 @@ function CursoDocenteCard({
 }
 
 function DashboardDocente() {
+  const { desde } = useDesde('Inicio')
   const usuario = useUsuario()
   const resumen = useResumenDocente(usuario.docenteId)
   // Todos los cursos activos con notas del docente (antes se deducían de sus últimas 100 notas y faltaban cursos).
@@ -653,6 +656,7 @@ function DashboardDocente() {
                               <Link
                                 component={RouterLink}
                                 to={`/estudiantes/${estudiante.id}`}
+                                state={{ desde }}
                                 underline="always"
                               >
                                 {nombreCompleto(estudiante)}

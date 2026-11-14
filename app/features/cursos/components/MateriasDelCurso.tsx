@@ -8,18 +8,27 @@ import { StatusChip } from '../../../shared/ui/StatusChip'
 import { useMateriasDelCurso } from '../api/useCursos'
 import { usePaginaEnRango } from '../../../shared/hooks/usePaginaEnRango'
 import type { MateriaDelCurso, PaginaDetalleParams } from '../model/types'
+import { useDesde } from '../../../shared/navegacion/desde'
 
 const LIMITES = [10, 20, 50]
 
-const COLUMNAS: DataTableColumn<MateriaDelCurso>[] = [
+/** Enlace a la materia que recuerda el curso: su flecha «← curso» vuelve aquí. */
+function EnlaceMateria({ id, nombre, curso }: { id: number; nombre: string; curso: string }) {
+  const { desde } = useDesde(curso)
+  return (
+    <MuiLink component={RouterLink} to={`/materias/${id}`} state={{ desde }} sx={{ fontWeight: 600 }}>
+      {nombre}
+    </MuiLink>
+  )
+}
+
+const columnas = (curso: string): DataTableColumn<MateriaDelCurso>[] => [
   {
     id: 'nombre',
     header: 'Materia',
     primary: true,
     render: (m) => (
-      <MuiLink component={RouterLink} to={`/materias/${m.id}`} sx={{ fontWeight: 600 }}>
-        {m.nombre}
-      </MuiLink>
+      <EnlaceMateria id={m.id} nombre={m.nombre} curso={curso} />
     ),
   },
   { id: 'codigo', header: 'Código', render: (m) => m.codigo },
@@ -36,10 +45,12 @@ interface MateriasDelCursoProps {
   cursoId: number
   params: PaginaDetalleParams
   onChange: (changes: Record<string, string | number | null>) => void
+  /** Nombre del curso: la flecha de la materia lo muestra para volver aquí. */
+  cursoNombre: string
 }
 
 /** Pestaña "Materias". El modelo no relaciona curso y materia: se deducen de las calificaciones registradas. */
-export function MateriasDelCurso({ cursoId, params, onChange }: MateriasDelCursoProps) {
+export function MateriasDelCurso({ cursoId, params, onChange, cursoNombre }: MateriasDelCursoProps) {
   const query = useMateriasDelCurso(cursoId, params)
   const fueraDeRango = usePaginaEnRango(query.data?.meta, query.data?.data.length, onChange)
 
@@ -52,7 +63,7 @@ export function MateriasDelCurso({ cursoId, params, onChange }: MateriasDelCurso
         {(data) => (
           <DataTable
             caption="Materias con calificaciones en el curso"
-            columns={COLUMNAS}
+            columns={columnas(cursoNombre)}
             rows={data.data}
             getRowId={(materia) => materia.id}
             pagination={{

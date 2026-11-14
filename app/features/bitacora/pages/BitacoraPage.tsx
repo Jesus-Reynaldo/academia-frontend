@@ -15,6 +15,7 @@ import { PageHeader } from '../../../shared/ui/PageHeader'
 import { QueryState } from '../../../shared/ui/QueryState'
 import { BuscadorUrl } from '../../../shared/ui/BuscadorUrl'
 import { reporteBitacora } from '../reportes/bitacoraPdf'
+import { useDesde } from '../../../shared/navegacion/desde'
 import { useBitacora } from '../api/bitacora.api'
 import {
   ACCIONES,
@@ -177,6 +178,7 @@ export function BitacoraPage() {
 }
 
 function Entrada({ registro: r }: { registro: RegistroBitacora }) {
+  const { desde } = useDesde('Bitácora')
   const recurso = RECURSO[r.recurso]
   const Icono = ICONO_MODULO[recurso.modulo]
   const enlace = recurso.ruta && r.recursoId && r.accion !== 'ELIMINAR' ? `${recurso.ruta}/${r.recursoId}` : null
@@ -193,7 +195,7 @@ function Entrada({ registro: r }: { registro: RegistroBitacora }) {
           {r.usuario && <span className="text-texto-suave"> ({ETIQUETA_ROL[r.usuario.rol]})</span>}{' '}
           {ETIQUETA_ACCION[r.accion].toLowerCase()} {recurso.articulo} {recurso.etiqueta}{' '}
           {enlace ? (
-            <Link component={RouterLink} to={enlace} underline="always">
+            <Link component={RouterLink} to={enlace} state={{ desde }} underline="always">
               «{legible(r.descripcion)}»
             </Link>
           ) : (

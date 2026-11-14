@@ -4,14 +4,16 @@ import { Link as RouterLink } from 'react-router'
 import { useDocente } from '../../docentes'
 import { useEstudiante } from '../../estudiantes'
 import type { CuentaUsuario } from '../model/types'
+import { useDesde } from '../../../shared/navegacion/desde'
 
 interface PersonaProps {
   id: number
 }
 
 function Enlace({ to, nombres, apellidos }: { to: string; nombres: string; apellidos: string }) {
+  const { desde } = useDesde('Usuarios')
   return (
-    <MuiLink component={RouterLink} to={to}>
+    <MuiLink component={RouterLink} to={to} state={{ desde }}>
       {`${apellidos}, ${nombres}`}
     </MuiLink>
   )

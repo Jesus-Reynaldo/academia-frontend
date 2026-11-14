@@ -158,7 +158,7 @@ export function CursoDetallePage({ id }: { id: number }) {
             </Box>
           ) : (
             <Box role="tabpanel" id="panel-materias" aria-labelledby="tab-materias">
-              <MateriasDelCurso cursoId={curso.id} params={pagina} onChange={updateParams} />
+              <MateriasDelCurso cursoId={curso.id} params={pagina} onChange={updateParams} cursoNombre={curso.nombre} />
             </Box>
           )}
 

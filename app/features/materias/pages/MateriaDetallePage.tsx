@@ -1,4 +1,3 @@
-import ArrowBack from '@mui/icons-material/ArrowBack'
 import EditOutlined from '@mui/icons-material/EditOutlined'
 import Alert from '@mui/material/Alert'
 import Button from '@mui/material/Button'
@@ -19,12 +18,10 @@ import { CalificacionesDeMateria } from '../components/CalificacionesDeMateria'
 import { EliminarMateriaDialog } from '../components/EliminarMateriaDialog'
 import { MateriaFormDialog } from '../components/MateriaFormDialog'
 import { BotonCambioEstado } from '../../../shared/ui/BotonCambioEstado'
+import { VolverA } from '../../../shared/ui/VolverA'
 
-const VOLVER = (
-  <Button component={RouterLink} to="/materias" startIcon={<ArrowBack />} sx={{ mb: 1, minHeight: 44 }}>
-    Materias
-  </Button>
-)
+// Vuelve a Materias, o a la pantalla de origen si se llegó desde otra (p. ej. el detalle de un curso).
+const VOLVER = <VolverA to="/materias" etiqueta="Materias" />
 
 function NoEncontrada() {
   return (
