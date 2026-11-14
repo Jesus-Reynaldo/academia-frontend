@@ -23,6 +23,15 @@ import { apiFetch } from '../../../shared/api/http'
 import { LogoInstitucion } from '../../../shared/institucion/LogoInstitucion'
 import { useInstitucion } from '../../../shared/institucion/useInstitucion'
 import { useAuth } from '../context/auth-context'
+import { tomarSalidaAProposito } from '../model/token-storage'
+import { navigationFor } from '../../../shared/layout/navigation'
+import type { Rol } from '../../../shared/config/roles'
+
+/** ¿La ruta es del menú de este rol (o una ficha dentro de él, o el cambio de contraseña)? */
+function puedeVer(rol: Rol, ruta: string) {
+  if (ruta === '/' || ruta.startsWith('/cuenta/')) return true
+  return navigationFor(rol).some((item) => item.to !== '/' && (ruta === item.to || ruta.startsWith(`${item.to}/`)))
+}
 
 const loginSchema = z.object({
   email: z.string().min(1, 'Ingresa tu correo').email('Ingresa un correo válido'),
@@ -82,6 +91,8 @@ export function LoginPage() {
     return () => clearTimeout(t)
   }, [salud.isPending])
   const [serverError, setServerError] = useState<string | null>(null)
+  // true mientras se inicia sesión desde este formulario: entonces decide `onSubmit` a dónde ir, no el <Navigate>.
+  const [entrando, setEntrando] = useState(false)
 
   const {
     handleSubmit,
@@ -91,15 +102,22 @@ export function LoginPage() {
     formState: { errors, isSubmitting },
   } = useForm<LoginForm>({ resolver: zodResolver(loginSchema), defaultValues: { email: '', password: '' } })
 
-  if (status === 'authenticated') return <Navigate to="/" replace />
+  // Ya había sesión al abrir /login: al Inicio.
+  if (status === 'authenticated' && !entrando) return <Navigate to="/" replace />
 
   const onSubmit = handleSubmit(async ({ email, password }) => {
     setServerError(null)
+    setEntrando(true)
     try {
-      await login(email.trim(), password)
-      const destino = state.from ? `${state.from.pathname}${state.from.search ?? ''}` : '/'
+      const usuario = await login(email.trim(), password)
+      // Se vuelve a la pantalla anterior solo si este rol puede verla (puede haber entrado otra persona en la
+      // misma computadora, p. ej. un estudiante después del administrador); si no, al Inicio.
+      const salioAProposito = tomarSalidaAProposito()
+      const destino =
+        state.from && !salioAProposito && puedeVer(usuario.rol, state.from.pathname) ? `${state.from.pathname}${state.from.search ?? ''}` : '/'
       void navigate(destino, { replace: true })
     } catch (error) {
+      setEntrando(false)
       setServerError(mensajeDeError(error))
       setValue('password', '')
       setFocus('password')
