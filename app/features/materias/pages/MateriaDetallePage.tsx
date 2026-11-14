@@ -104,7 +104,7 @@ export function MateriaDetallePage({ materiaId }: { materiaId: number | null }) 
             )}
 
             <Stack spacing={2}>
-              <SectionCard title="Datos de la materia">
+              <SectionCard modulo="materias" title="Datos de la materia">
                 <DefinitionList
                   items={[
                     { label: 'Código', value: materia.codigo },
@@ -118,7 +118,7 @@ export function MateriaDetallePage({ materiaId }: { materiaId: number | null }) 
               </SectionCard>
 
               {puedeVerCalificaciones && (
-                <SectionCard title="Calificaciones">
+                <SectionCard modulo="calificaciones" title="Calificaciones">
                   <CalificacionesDeMateria materiaId={materia.id} />
                 </SectionCard>
               )}

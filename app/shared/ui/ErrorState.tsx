@@ -10,6 +10,7 @@ interface ErrorStateProps {
 export function ErrorState({ error, onRetry }: ErrorStateProps) {
   return (
     <Alert
+      className="rounded-xl"
       severity="error"
       action={
         onRetry && (

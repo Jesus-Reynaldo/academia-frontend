@@ -31,7 +31,7 @@ export function MiCuentaPage() {
     <>
       <PageHeader title="Mi cuenta" modulo="cuenta" subtitle={estudiante.data ? `${estudiante.data.nombres} ${estudiante.data.apellidos}` : undefined} />
       <Stack spacing={2}>
-        <SectionCard title="Mis datos">
+        <SectionCard modulo="cuenta" title="Mis datos">
           {estudiante.isPending ? (
             <Skeleton variant="rounded" height={140} />
           ) : estudiante.isError ? (
@@ -56,7 +56,7 @@ export function MiCuentaPage() {
         </SectionCard>
 
         <Box id="inscripciones">
-          <SectionCard title="Mis inscripciones">
+          <SectionCard modulo="inscripciones" title="Mis inscripciones">
             {inscripciones.isPending ? (
               <Skeleton variant="rounded" height={120} />
             ) : inscripciones.isError ? (

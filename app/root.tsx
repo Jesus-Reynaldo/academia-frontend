@@ -3,6 +3,7 @@ import CircularProgress from '@mui/material/CircularProgress'
 import Box from '@mui/material/Box'
 import { ThemeProvider } from '@mui/material/styles'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+import { MotionConfig } from 'motion/react'
 import { useState } from 'react'
 import { Links, Meta, Outlet, Scripts, ScrollRestoration } from 'react-router'
 import { ApiError } from './shared/api/errors'
@@ -72,11 +73,14 @@ export default function Root() {
     <ThemeProvider theme={theme}>
       <CssBaseline />
       <QueryClientProvider client={queryClient}>
-        <NotificationsProvider>
-          <AuthProvider>
-            <Outlet />
-          </AuthProvider>
-        </NotificationsProvider>
+        {/* reducedMotion="user": sin animaciones si el sistema operativo pide reducir el movimiento. */}
+        <MotionConfig reducedMotion="user">
+          <NotificationsProvider>
+            <AuthProvider>
+              <Outlet />
+            </AuthProvider>
+          </NotificationsProvider>
+        </MotionConfig>
       </QueryClientProvider>
     </ThemeProvider>
   )

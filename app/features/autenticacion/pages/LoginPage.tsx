@@ -82,16 +82,28 @@ export function LoginPage() {
   })
 
   return (
-    <Box
-      sx={{
-        minHeight: '100vh',
-        display: 'grid',
-        placeItems: 'center',
-        p: 2,
-        background: (theme) =>
-          `linear-gradient(160deg, ${theme.palette.primary.light} 0%, ${theme.palette.background.default} 60%)`,
-      }}
-    >
+    <div className="grid min-h-screen bg-fondo lg:grid-cols-2">
+      {/* Panel de marca: solo en pantallas grandes, decorativo para lectores de pantalla (el título real está en el formulario). */}
+      <div aria-hidden className="relative hidden overflow-hidden bg-gradient-to-br from-sidebar via-primary-dark to-primary p-12 text-white lg:flex lg:flex-col lg:justify-between">
+        <div className="flex items-center gap-3 text-lg font-semibold">
+          <span className="grid h-11 w-11 place-items-center rounded-xl bg-white/15">
+            <SchoolRounded />
+          </span>
+          Sistema Académico
+        </div>
+        <div className="max-w-md">
+          <p className="m-0 text-4xl font-bold leading-tight">Notas, cursos e historial en un solo lugar.</p>
+          <ul className="mt-8 list-none space-y-4 p-0 text-base text-white/85">
+            <li className="flex items-center gap-3"><span className="h-2 w-2 rounded-full bg-white" />Estudiantes: cómo voy en cada materia</li>
+            <li className="flex items-center gap-3"><span className="h-2 w-2 rounded-full bg-white" />Docentes: registrar notas por curso</li>
+            <li className="flex items-center gap-3"><span className="h-2 w-2 rounded-full bg-white" />Administración: todo el año escolar</li>
+          </ul>
+        </div>
+        <p className="m-0 text-sm text-white/60">Colegio · Gestión académica</p>
+        <span className="pointer-events-none absolute -bottom-24 -right-24 h-80 w-80 rounded-full bg-white/10" />
+        <span className="pointer-events-none absolute -top-16 right-24 h-40 w-40 rounded-full bg-white/5" />
+      </div>
+      <div className="grid place-items-center p-4">
       <Card sx={{ width: '100%', maxWidth: 420 }}>
         <CardContent sx={{ p: { xs: 3, sm: 4 } }}>
           <Stack spacing={1} sx={{ mb: 3, alignItems: "center" }}>
@@ -206,6 +218,7 @@ export function LoginPage() {
           )}
         </CardContent>
       </Card>
-    </Box>
+      </div>
+    </div>
   )
 }

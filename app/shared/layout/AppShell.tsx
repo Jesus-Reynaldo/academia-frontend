@@ -7,6 +7,7 @@ import Box from '@mui/material/Box'
 import Divider from '@mui/material/Divider'
 import Drawer from '@mui/material/Drawer'
 import IconButton from '@mui/material/IconButton'
+import LinearProgress from '@mui/material/LinearProgress'
 import List from '@mui/material/List'
 import ListItemButton from '@mui/material/ListItemButton'
 import ListItemIcon from '@mui/material/ListItemIcon'
@@ -22,6 +23,8 @@ import MenuIcon from '@mui/icons-material/Menu'
 import Logout from '@mui/icons-material/Logout'
 import LockReset from '@mui/icons-material/LockReset'
 import SchoolRounded from '@mui/icons-material/SchoolRounded'
+import { useIsFetching } from '@tanstack/react-query'
+import { motion } from 'motion/react'
 import { Fragment, useState, type ReactNode } from 'react'
 import { NavLink, useLocation, useNavigate } from 'react-router'
 import { ETIQUETA_ROL, type Rol } from '../config/roles'
@@ -85,6 +88,8 @@ export function AppShell({ items, user, onLogout, children }: AppShellProps) {
               component={NavLink}
               to={item.to}
               end={item.to === '/'}
+              // Descarga el código de la pantalla al apuntar o enfocar el enlace: abre al instante.
+              prefetch="intent"
               onClick={closeMobile}
               sx={{
                 borderRadius: 2,
@@ -226,7 +231,16 @@ export function AppShell({ items, user, onLogout, children }: AppShellProps) {
             outline: 'none',
           }}
         >
-          {children}
+          <BarraCarga />
+          {/* La clave cambia con la ruta: cada pantalla entra con un fundido (MotionConfig lo apaga si se pidió reducir movimiento). */}
+          <motion.div
+            key={location.pathname}
+            initial={{ opacity: 0, y: 6 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.2, ease: 'easeOut' }}
+          >
+            {children}
+          </motion.div>
         </Box>
 
         {barraInferior && (
@@ -243,6 +257,7 @@ export function AppShell({ items, user, onLogout, children }: AppShellProps) {
                   component={NavLink}
                   to={item.to}
                   end={item.to === '/'}
+                  prefetch="intent"
                   value={item.to}
                   label={item.label}
                   icon={item.icon}
@@ -258,6 +273,33 @@ export function AppShell({ items, user, onLogout, children }: AppShellProps) {
           </Paper>
         )}
       </Box>
+    </Box>
+  )
+}
+
+/**
+ * Línea fina arriba mientras se traen datos. Aparece solo si la carga pasa de 300 ms (sin parpadeos en cargas
+ * rápidas) y se oculta a lectores de pantalla cuando no hay carga.
+ */
+function BarraCarga() {
+  const cargando = useIsFetching() > 0
+  return (
+    <Box
+      aria-hidden={!cargando}
+      sx={{
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        right: 0,
+        zIndex: (t) => t.zIndex.appBar + 1,
+        opacity: cargando ? 1 : 0,
+        transition: 'opacity 200ms ease',
+        transitionDelay: cargando ? '300ms' : '0ms',
+        pointerEvents: 'none',
+        '@media print': { display: 'none' },
+      }}
+    >
+      <LinearProgress aria-label="Cargando datos" sx={{ height: 3 }} />
     </Box>
   )
 }

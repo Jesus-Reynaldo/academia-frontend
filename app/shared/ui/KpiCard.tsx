@@ -6,6 +6,7 @@ import type { ReactNode } from 'react'
 import { Link as RouterLink } from 'react-router'
 import type { SvgIconComponent } from '@mui/icons-material'
 import { ICONO_MODULO, type Modulo } from '../config/modulos'
+import { Aparecer } from './Aparecer'
 
 interface KpiCardProps {
   label: string
@@ -53,9 +54,11 @@ export function KpiCard({ label, value, hint, loading, to, modulo, icono, tono =
 
   if (to) {
     return (
+      <Aparecer className="h-full">
       <Card
         component={RouterLink}
         to={to}
+        className="motion-safe:transition-transform motion-safe:hover:-translate-y-0.5"
         sx={{
           height: '100%',
           display: 'block',
@@ -73,8 +76,13 @@ export function KpiCard({ label, value, hint, loading, to, modulo, icono, tono =
       >
         {content}
       </Card>
+      </Aparecer>
     )
   }
 
-  return <Card sx={{ height: '100%' }}>{content}</Card>
+  return (
+    <Aparecer className="h-full">
+      <Card sx={{ height: '100%' }}>{content}</Card>
+    </Aparecer>
+  )
 }

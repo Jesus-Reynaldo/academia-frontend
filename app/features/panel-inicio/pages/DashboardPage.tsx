@@ -60,6 +60,7 @@ import {
 } from '../api/useDashboard'
 import type { CalificacionDashboard } from '../model/types'
 import { InicioEstudiante } from './InicioEstudiante'
+import { Aparecer } from '../../../shared/ui/Aparecer'
 import { ICONO_MODULO } from '../../../shared/config/modulos'
 
 const IconoCurso = ICONO_MODULO.cursos
@@ -323,7 +324,7 @@ function DashboardAdmin() {
 
       <Grid component="div" container spacing={2}>
         <Grid component="div" size={{ xs: 12, md: 6 }}>
-          <SectionCard title="Ocupación por curso">
+          <SectionCard modulo="cursos" title="Ocupación por curso">
             <QueryState query={ocupacion} isEmpty={(data) => data.data.length === 0} emptyTitle="Sin cursos" skeletonHeight={240}>
               {(data) => (
                 <Stack spacing={2}>
@@ -349,7 +350,7 @@ function DashboardAdmin() {
         </Grid>
 
         <Grid component="div" size={{ xs: 12, md: 6 }}>
-          <SectionCard title="Promedio por curso">
+          <SectionCard modulo="cursos" title="Promedio por curso">
             <QueryState query={promedios} isEmpty={(data) => data.data.length === 0} emptyTitle="Sin promedios" skeletonHeight={240}>
               {(data) => (
                 <Box role="group" aria-label={`Promedios por curso: ${data.data.map((item) => `${item.curso} ${item.promedio}`).join('; ')}`}>
@@ -369,6 +370,7 @@ function DashboardAdmin() {
 
         <Grid component="div" size={{ xs: 12, md: 6 }}>
           <SectionCard
+            modulo="calificaciones"
             title="Distribución de notas"
             actions={
               <MateriaSelector
@@ -425,6 +427,7 @@ function DashboardAdmin() {
 
         <Grid component="div" size={{ xs: 12, md: 6 }}>
           <SectionCard
+            modulo="estudiantes"
             title="Estudiantes en riesgo"
             actions={
               <TextField size="small" type="number" label="Umbral" value={umbral} slotProps={{ htmlInput: { min: 0, max: 100 } }} onChange={(event) => {
@@ -464,7 +467,7 @@ function DashboardAdmin() {
         </Grid>
 
         <Grid component="div" size={12}>
-          <SectionCard title="Últimas calificaciones"><ListaCalificaciones query={ultimas} /></SectionCard>
+          <SectionCard modulo="calificaciones" title="Últimas calificaciones"><ListaCalificaciones query={ultimas} /></SectionCard>
         </Grid>
       </Grid>
     </>
@@ -550,7 +553,7 @@ function DashboardDocente() {
         </Grid>
       </Grid>
       <Box sx={{ mb: 2 }}>
-      <SectionCard title="Cursos con calificaciones registradas">
+      <SectionCard modulo="cursos" title="Cursos con calificaciones registradas">
         <QueryState
           query={cursosConCalificaciones}
           isEmpty={(data) => data.length === 0}
@@ -559,13 +562,15 @@ function DashboardDocente() {
         >
           {() => (
             <Grid component="div" container spacing={1.5}>
-              {cursos.map((curso) => (
+              {cursos.map((curso, indice) => (
                 <Grid component="div" key={curso.id} size={{ xs: 12, sm: 6, md: 4 }}>
+                  <Aparecer indice={indice} className="h-full">
                   <CursoDocenteCard
                     curso={curso}
                     seleccionado={curso.id === cursoSeleccionadoId}
                     onSelect={() => setCursoId(curso.id)}
                   />
+                  </Aparecer>
                 </Grid>
               ))}
             </Grid>
@@ -576,6 +581,7 @@ function DashboardDocente() {
       <Grid component="div" container spacing={2}>
         <Grid component="div" size={{ xs: 12, md: 7 }}>
           <SectionCard
+            modulo="calificaciones"
             title="Últimas calificaciones"
             actions={
               cursos.length > 0 ? (
@@ -665,6 +671,7 @@ function DashboardDocente() {
         <Grid component="div" size={{ xs: 12, md: 5 }}>
           <Stack spacing={2}>
             <SectionCard
+              modulo="calificaciones"
               title="Distribución de notas"
               actions={
                 materias.length > 0 ? (
@@ -730,7 +737,7 @@ function DashboardDocente() {
                 </QueryState>
               )}
             </SectionCard>
-            <SectionCard title="Seguimiento de estudiantes">
+            <SectionCard modulo="estudiantes" title="Seguimiento de estudiantes">
               <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
                 Consulta el avance y las calificaciones individuales desde la ficha de cada estudiante.
               </Typography>

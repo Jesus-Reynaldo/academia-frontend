@@ -20,6 +20,7 @@ import { useUsuario } from '../../autenticacion'
 import { desglosar, estaDebajo, resumenPeriodo, useAvanceEstudiante } from '../../historial-academico'
 import { useCalificacionesList } from '../api/useCalificaciones'
 import { nombreDocente } from '../model/etiquetas'
+import { motion } from 'motion/react'
 
 /** Mis materias: una tarjeta por materia de la gestión elegida (por defecto, la actual); las que están bajo 51 primero. */
 export function MisMateriasPage() {
@@ -114,12 +115,18 @@ export function MisMateriasPage() {
               component="ul"
               sx={{ listStyle: 'none', m: 0, p: 0, display: 'grid', gap: 2, gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr', lg: '1fr 1fr 1fr' } }}
             >
-              {materias.map((materia) => {
+              {materias.map((materia, indice) => {
                 const d = desglosar(materia)
                 const debajo = estaDebajo(materia.promedio)
                 const docente = docentePorMateria.get(materia.materiaId)
                 return (
-                  <Box component="li" key={materia.materiaId}>
+                  <motion.li
+                    key={materia.materiaId}
+                    layout
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.25, ease: 'easeOut', delay: Math.min(indice, 12) * 0.035 }}
+                  >
                     <Card sx={{ height: '100%', borderLeft: 4, borderLeftColor: debajo ? 'error.main' : 'success.main' }}>
                       <CardActionArea component={RouterLink} to={`/mi/materias/${materia.materiaId}${sufijo}`} sx={{ height: '100%' }}>
                         <CardContent>
@@ -149,7 +156,7 @@ export function MisMateriasPage() {
                         </CardContent>
                       </CardActionArea>
                     </Card>
-                  </Box>
+                  </motion.li>
                 )
               })}
             </Box>

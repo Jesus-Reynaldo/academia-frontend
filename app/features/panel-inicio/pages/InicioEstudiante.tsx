@@ -124,7 +124,7 @@ export function InicioEstudiante() {
       <Grid container spacing={2}>
         {resumen && resumen.debajo.length > 0 && periodo && (
           <Grid size={{ xs: 12, md: 6 }}>
-            <SectionCard title="Materias para reforzar">
+            <SectionCard modulo="materias" title="Materias para reforzar">
               <List disablePadding>
                 {periodo.cursos
                   .flatMap((c) => c.materias)
@@ -149,6 +149,7 @@ export function InicioEstudiante() {
 
         <Grid size={{ xs: 12, md: resumen && resumen.debajo.length > 0 ? 6 : 12 }}>
           <SectionCard
+            modulo="calificaciones"
             title="Últimas notas registradas"
             actions={
               <Button component={RouterLink} to="/mi/materias" sx={{ minHeight: 44 }}>
@@ -188,7 +189,7 @@ export function InicioEstudiante() {
 
         {(resumenGeneral.data?.porPeriodo.length ?? 0) > 0 && (
           <Grid size={12}>
-            <SectionCard title="Mi evolución por gestión">
+            <SectionCard modulo="historial" title="Mi evolución por gestión">
               <EvolucionGestiones porPeriodo={resumenGeneral.data?.porPeriodo ?? []} />
             </SectionCard>
           </Grid>

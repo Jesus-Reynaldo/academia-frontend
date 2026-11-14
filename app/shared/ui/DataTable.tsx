@@ -219,7 +219,7 @@ export function DataTable<T>({
           <Box component="caption" sx={visuallyHidden}>
             {caption}
           </Box>
-          <TableHead>
+          <TableHead className="bg-fondo">
             <TableRow>
               {columns.map((column) => {
                 const active = sort !== undefined && column.sortField !== undefined && sort.sortBy === column.sortField
