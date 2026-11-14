@@ -1,4 +1,5 @@
 import Add from '@mui/icons-material/Add'
+import UploadFileOutlined from '@mui/icons-material/UploadFileOutlined'
 import Box from '@mui/material/Box'
 import Button from '@mui/material/Button'
 import Card from '@mui/material/Card'
@@ -38,6 +39,7 @@ import {
 import { BuscadorUrl } from '../../../shared/ui/BuscadorUrl'
 import { reporteInscripciones } from '../reportes/inscripcionesPdf'
 import { useDesde } from '../../../shared/navegacion/desde'
+import { ImportarInscripcionesDialog } from '../components/ImportarInscripcionesDialog'
 
 const LIMITES = [10, 20, 50]
 
@@ -86,6 +88,7 @@ export function InscripcionesListPage({ modo }: InscripcionesListPageProps) {
   const fueraDeRango = usePaginaEnRango(query.data?.meta, query.data?.data.length, updateParams)
 
   const [creando, setCreando] = useState(false)
+  const [importando, setImportando] = useState(false)
   const [cambio, setCambio] = useState<{ inscripcion: Inscripcion; estado: EstadoInscripcion } | null>(null)
   const [aEliminar, setAEliminar] = useState<Inscripcion | null>(null)
 
@@ -175,9 +178,14 @@ export function InscripcionesListPage({ modo }: InscripcionesListPageProps) {
         }
         actions={
           esAdmin && (
-            <Button variant="contained" startIcon={<Add />} onClick={() => setCreando(true)} sx={{ minHeight: 44 }}>
-              Nueva inscripción
-            </Button>
+            <>
+              <Button variant="outlined" startIcon={<UploadFileOutlined />} onClick={() => setImportando(true)} sx={{ minHeight: 44 }}>
+                Importar Excel
+              </Button>
+              <Button variant="contained" startIcon={<Add />} onClick={() => setCreando(true)} sx={{ minHeight: 44 }}>
+                Nueva inscripción
+              </Button>
+            </>
           )
         }
       />
@@ -255,6 +263,7 @@ export function InscripcionesListPage({ modo }: InscripcionesListPageProps) {
       </QueryState>
 
       {creando && <InscripcionFormDialog onClose={() => setCreando(false)} />}
+      {importando && <ImportarInscripcionesDialog onClose={() => setImportando(false)} />}
       {cambio && <CambiarEstadoDialog inscripcion={cambio.inscripcion} estado={cambio.estado} onClose={() => setCambio(null)} />}
       {aEliminar && <EliminarInscripcionDialog inscripcion={aEliminar} onClose={() => setAEliminar(null)} onDone={despuesDeEliminar} />}
     </>
