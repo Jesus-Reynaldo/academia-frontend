@@ -2,11 +2,9 @@ import ArrowBack from '@mui/icons-material/ArrowBack'
 import EditOutlined from '@mui/icons-material/EditOutlined'
 import Alert from '@mui/material/Alert'
 import Box from '@mui/material/Box'
-import Breadcrumbs from '@mui/material/Breadcrumbs'
 import Button from '@mui/material/Button'
 import Card from '@mui/material/Card'
 import CardContent from '@mui/material/CardContent'
-import MuiLink from '@mui/material/Link'
 import Stack from '@mui/material/Stack'
 import Tab from '@mui/material/Tab'
 import Tabs from '@mui/material/Tabs'
@@ -29,6 +27,7 @@ import { OcupacionCurso } from '../components/OcupacionCurso'
 import type { PaginaDetalleParams } from '../model/types'
 import { BotonCambioEstado } from '../../../shared/ui/BotonCambioEstado'
 import { reporteInscripciones } from '../../inscripciones'
+import { VolverA } from '../../../shared/ui/VolverA'
 
 const LIMITES = [10, 20, 50]
 type Pestana = 'estudiantes' | 'materias'
@@ -42,23 +41,14 @@ function leerPagina(searchParams: URLSearchParams): PaginaDetalleParams {
   }
 }
 
-function Migas({ nombre }: { nombre: string }) {
-  return (
-    <Breadcrumbs aria-label="Ruta de navegación" sx={{ mb: 2 }}>
-      <MuiLink component={RouterLink} to="/cursos" underline="hover" color="inherit">
-        Cursos
-      </MuiLink>
-      <Typography color="text.primary" sx={{ overflowWrap: 'anywhere' }}>
-        {nombre}
-      </Typography>
-    </Breadcrumbs>
-  )
+function Migas() {
+  return <VolverA to="/cursos" etiqueta="Cursos" />
 }
 
 function NoEncontrado() {
   return (
     <>
-      <Migas nombre="No encontrado" />
+      <Migas />
       <EmptyState
         title="No encontramos este curso"
         description="Puede que se haya eliminado o que el enlace esté mal escrito."
@@ -94,7 +84,7 @@ export function CursoDetallePage({ id }: { id: number }) {
     <QueryState query={query} skeletonHeight={280}>
       {(curso) => (
         <>
-          <Migas nombre={curso.nombre} />
+          <Migas />
           <PageHeader
             title={curso.nombre}
             modulo="cursos"

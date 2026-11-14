@@ -2,7 +2,6 @@ import ArrowBack from '@mui/icons-material/ArrowBack'
 import EditOutlined from '@mui/icons-material/EditOutlined'
 import Avatar from '@mui/material/Avatar'
 import Box from '@mui/material/Box'
-import Breadcrumbs from '@mui/material/Breadcrumbs'
 import Button from '@mui/material/Button'
 import Card from '@mui/material/Card'
 import CardContent from '@mui/material/CardContent'
@@ -33,6 +32,7 @@ import {
   type CalificacionesDocenteParams,
   type Docente,
 } from '../model/types'
+import { VolverA } from '../../../shared/ui/VolverA'
 
 const LIMITES = [10, 20, 50]
 type Pestana = 'resumen' | 'calificaciones'
@@ -64,7 +64,7 @@ export function DocenteFichaPage({ id }: { id: number }) {
   if (query.isError && query.error instanceof ApiError && query.error.status === 404) {
     return (
       <>
-        <Migas nombre="No encontrado" />
+        <Migas />
         <EmptyState
           title="No encontramos este docente"
           description="Puede que se haya eliminado o que el enlace esté mal escrito."
@@ -82,7 +82,7 @@ export function DocenteFichaPage({ id }: { id: number }) {
   if (query.isError) {
     return (
       <>
-        <Migas nombre="Docente" />
+        <Migas />
         <ErrorState error={query.error} onRetry={() => void query.refetch()} />
       </>
     )
@@ -110,7 +110,7 @@ export function DocenteFichaPage({ id }: { id: number }) {
 
   return (
     <>
-      <Migas nombre={nombre} />
+      <Migas />
 
       {/* Cabecera: avatar con iniciales, nombre, código, estado y acciones. */}
       <Box
@@ -189,18 +189,9 @@ export function DocenteFichaPage({ id }: { id: number }) {
   )
 }
 
-/** Migas de pan: Docentes › nombre (docs/UI-UX-PLAN.md, 6.1). */
-function Migas({ nombre }: { nombre: string }) {
-  return (
-    <Breadcrumbs aria-label="Ruta de navegación" sx={{ mb: 2 }}>
-      <Link component={RouterLink} to="/docentes" underline="hover" color="inherit">
-        Docentes
-      </Link>
-      <Typography color="text.primary" sx={{ overflowWrap: 'anywhere' }}>
-        {nombre}
-      </Typography>
-    </Breadcrumbs>
-  )
+/** Botón «← Docentes» para volver a la lista (igual en todas las sub-pantallas). */
+function Migas() {
+  return <VolverA to="/docentes" etiqueta="Docentes" />
 }
 
 function Dato({ etiqueta, children }: { etiqueta: string; children: ReactNode }) {

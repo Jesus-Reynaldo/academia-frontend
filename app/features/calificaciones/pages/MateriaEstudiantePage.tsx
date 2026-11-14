@@ -1,10 +1,8 @@
 import ArrowBack from '@mui/icons-material/ArrowBack'
 import Box from '@mui/material/Box'
-import Breadcrumbs from '@mui/material/Breadcrumbs'
 import Button from '@mui/material/Button'
 import Card from '@mui/material/Card'
 import CardContent from '@mui/material/CardContent'
-import MuiLink from '@mui/material/Link'
 import Skeleton from '@mui/material/Skeleton'
 import Typography from '@mui/material/Typography'
 import { Link as RouterLink, useSearchParams } from 'react-router'
@@ -19,16 +17,10 @@ import { estaDebajo, useAvanceEstudiante, type HistorialMateria } from '../../hi
 import { useCalificacionesList } from '../api/useCalificaciones'
 import { nombreDocente } from '../model/etiquetas'
 import { ETIQUETA_TIPO } from '../model/types'
+import { VolverA } from '../../../shared/ui/VolverA'
 
-function Migas({ nombre }: { nombre: string }) {
-  return (
-    <Breadcrumbs aria-label="Ruta de navegación" sx={{ mb: 2 }}>
-      <MuiLink component={RouterLink} to="/mi/materias" underline="hover" color="inherit">
-        Mis materias
-      </MuiLink>
-      <Typography color="text.primary">{nombre}</Typography>
-    </Breadcrumbs>
-  )
+function Migas() {
+  return <VolverA to="/mi/materias" etiqueta="Mis materias" />
 }
 
 /** Detalle de una materia del estudiante: promedio, docente y cada evaluación con la observación del docente. */
@@ -46,7 +38,7 @@ export function MateriaEstudiantePage({ materiaId }: { materiaId: number | null 
     // Una materia que el estudiante no cursa (o un enlace mal escrito) no muestra datos de nadie.
     return (
       <>
-        <Migas nombre="No encontrada" />
+        <Migas />
         <PageHeader title="Materia no encontrada" />
         <EmptyState
           title="No encontramos esta materia en tus calificaciones"
@@ -64,7 +56,7 @@ export function MateriaEstudiantePage({ materiaId }: { materiaId: number | null 
   const debajo = estaDebajo(materia.promedio)
   return (
     <>
-      <Migas nombre={materia.materia} />
+      <Migas />
       <Box sx={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'center', gap: 2, mb: 2 }}>
         <Box>
           <Typography variant="h1" component="h1" sx={{ overflowWrap: 'anywhere' }}>

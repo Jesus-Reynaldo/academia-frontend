@@ -3,11 +3,9 @@ import EditOutlined from '@mui/icons-material/EditOutlined'
 import Alert from '@mui/material/Alert'
 import Avatar from '@mui/material/Avatar'
 import Box from '@mui/material/Box'
-import Breadcrumbs from '@mui/material/Breadcrumbs'
 import Button from '@mui/material/Button'
 import Card from '@mui/material/Card'
 import CardContent from '@mui/material/CardContent'
-import MuiLink from '@mui/material/Link'
 import Stack from '@mui/material/Stack'
 import Tab from '@mui/material/Tab'
 import Tabs from '@mui/material/Tabs'
@@ -30,6 +28,7 @@ import { InscripcionesDelEstudiante } from '../components/InscripcionesDelEstudi
 import { HistorialAcademicoPage } from '../../historial-academico'
 import type { PaginaFichaParams } from '../model/types'
 import { BotonCambioEstado } from '../../../shared/ui/BotonCambioEstado'
+import { VolverA } from '../../../shared/ui/VolverA'
 
 const LIMITES = [10, 20, 50]
 const PESTANAS = ['datos', 'inscripciones', 'calificaciones', 'historial'] as const
@@ -46,23 +45,14 @@ function leerPagina(searchParams: URLSearchParams): PaginaFichaParams {
   }
 }
 
-function Migas({ nombre }: { nombre: string }) {
-  return (
-    <Breadcrumbs aria-label="Ruta de navegación" sx={{ mb: 2 }}>
-      <MuiLink component={RouterLink} to="/estudiantes" underline="hover" color="inherit">
-        Estudiantes
-      </MuiLink>
-      <Typography color="text.primary" sx={{ overflowWrap: 'anywhere' }}>
-        {nombre}
-      </Typography>
-    </Breadcrumbs>
-  )
+function Migas() {
+  return <VolverA to="/estudiantes" etiqueta="Estudiantes" />
 }
 
 function NoEncontrado() {
   return (
     <>
-      <Migas nombre="No encontrado" />
+      <Migas />
       <EmptyState
         title="No encontramos este estudiante"
         description="Puede que se haya eliminado o que el enlace esté mal escrito."
@@ -99,7 +89,7 @@ export function EstudianteFichaPage({ id }: { id: number }) {
         const nombre = `${estudiante.nombres} ${estudiante.apellidos}`
         return (
           <>
-            <Migas nombre={nombre} />
+            <Migas />
 
             <Box sx={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: 2, mb: 2 }}>
               <Stack direction="row" spacing={2} sx={{ alignItems: 'center', minWidth: 0 }}>
