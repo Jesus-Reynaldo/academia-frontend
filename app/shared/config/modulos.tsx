@@ -10,7 +10,9 @@ import HistoryEduOutlined from '@mui/icons-material/HistoryEduOutlined'
 import HomeOutlined from '@mui/icons-material/HomeOutlined'
 import ManageAccountsOutlined from '@mui/icons-material/ManageAccountsOutlined'
 import ManageHistoryOutlined from '@mui/icons-material/ManageHistoryOutlined'
+import MeetingRoomOutlined from '@mui/icons-material/MeetingRoomOutlined'
 import MenuBookOutlined from '@mui/icons-material/MenuBookOutlined'
+import ScheduleOutlined from '@mui/icons-material/ScheduleOutlined'
 import SchoolOutlined from '@mui/icons-material/SchoolOutlined'
 import SettingsOutlined from '@mui/icons-material/SettingsOutlined'
 import type { SvgIconComponent } from '@mui/icons-material'
@@ -26,6 +28,8 @@ export type Modulo =
   | 'inscripciones'
   | 'calificaciones'
   | 'asignaciones'
+  | 'aulas'
+  | 'horarios'
   | 'historial'
   | 'cuenta'
   | 'bitacora'
@@ -47,6 +51,8 @@ export const ICONO_MODULO: Record<Modulo, SvgIconComponent> = {
   inscripciones: AssignmentIndOutlined,
   calificaciones: GradeOutlined,
   asignaciones: CoPresentOutlined,
+  aulas: MeetingRoomOutlined,
+  horarios: ScheduleOutlined,
   historial: HistoryEduOutlined,
   cuenta: AccountCircleOutlined,
   bitacora: ManageHistoryOutlined,

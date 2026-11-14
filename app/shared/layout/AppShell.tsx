@@ -46,7 +46,7 @@ export function AppShell({ items, user, onLogout, children }: AppShellProps) {
   const navigate = useNavigate()
   const [mobileOpen, setMobileOpen] = useState(false)
   const location = useLocation()
-  // Estudiante en celular o tablet: sus 4 destinos van en una barra inferior fija, sin menú lateral.
+  // Estudiante en celular o tablet: sus 5 destinos van en una barra inferior fija, sin menú lateral.
   const barraInferior = user.rol === 'ESTUDIANTE' && !isDesktop
   const destinoActual =
     [...items].sort((a, b) => b.to.length - a.to.length).find((item) => (item.to === '/' ? location.pathname === '/' : location.pathname.startsWith(item.to)))?.to ?? false

@@ -28,6 +28,8 @@ export function navigationFor(rol: Rol): NavItem[] {
         item('Materias', '/materias', 'materias', 'Académico'),
         item('Períodos', '/periodos-academicos', 'periodos', 'Académico'),
         item('Asignación docente', '/asignaciones-docentes', 'asignaciones', 'Académico'),
+        item('Aulas', '/aulas', 'aulas', 'Académico'),
+        item('Horarios', '/horarios', 'horarios', 'Académico'),
         item('Inscripciones', '/inscripciones', 'inscripciones', 'Gestión'),
         item('Calificaciones', '/calificaciones', 'calificaciones', 'Gestión'),
         item('Bitácora', '/bitacora', 'bitacora', 'Sistema'),
@@ -37,6 +39,7 @@ export function navigationFor(rol: Rol): NavItem[] {
     case 'DOCENTE':
       return [
         item('Inicio', '/', 'inicio'),
+        item('Mi horario', '/mi/horario', 'horarios'),
         item('Mis asignaciones', '/asignaciones-docentes', 'asignaciones'),
         item('Mis calificaciones', '/mi/calificaciones', 'calificaciones'),
         item('Estudiantes', '/estudiantes', 'estudiantes'),
@@ -45,9 +48,10 @@ export function navigationFor(rol: Rol): NavItem[] {
       ]
     case 'ESTUDIANTE':
       return [
-        // Estos 4 destinos son también la barra inferior en celular (docs/PLAN-FASE-2.md, 2.4).
+        // Estos 5 destinos son también la barra inferior en celular (docs/PLAN-FASE-2.md, 2.4).
         item('Inicio', '/', 'inicio'),
         item('Mis materias', '/mi/materias', 'materias'),
+        item('Horario', '/mi/horario', 'horarios'),
         item('Historial', '/mi/historial', 'historial'),
         item('Mi cuenta', '/mi/cuenta', 'cuenta'),
       ]
